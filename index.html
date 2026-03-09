@@ -809,19 +809,13 @@ body { font-family:'Roboto',sans-serif; background:var(--bg); color:var(--text);
         <input type="number" step="0.01" class="form-input" id="p3aFormVersement" placeholder="0">
       </div>
       <div class="form-group">
-        <label class="form-label">Rendement (CHF)</label>
-        <input type="number" step="0.01" class="form-input" id="p3aFormRendement" placeholder="0">
-      </div>
-    </div>
-    <div class="form-row">
-      <div class="form-group">
         <label class="form-label">Dividendes (CHF)</label>
         <input type="number" step="0.01" class="form-input" id="p3aFormDividendes" placeholder="0">
       </div>
-      <div class="form-group">
-        <label class="form-label">Retrait (CHF)</label>
-        <input type="number" step="0.01" class="form-input" id="p3aFormRetrait" placeholder="0">
-      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Retrait (CHF)</label>
+      <input type="number" step="0.01" class="form-input" id="p3aFormRetrait" placeholder="0">
     </div>
     <div class="form-group">
       <label class="form-label">Total 3A (CHF)</label>
@@ -957,7 +951,7 @@ const DEMO_3A = (() => {
 //  STATE
 // ════════════════════════════════════════
 let lppData      = DEMO_LPP;
-let data3A       = DEMO_3A;
+let data3A       = [];
 let salairesData = DEMO_SALAIRES;
 let depensesData = DEMO_DEPENSES;
 
@@ -1357,7 +1351,12 @@ async function fetchP3aPrice() {
 
 function renderP3a() {
   const fil = filterPeriod(data3A, p3aPeriod);
-  if (!fil.length) return;
+  if (!fil.length) {
+    ['p3aMonth','p3aVal','p3aVerse','p3aRend','p3aDivid','p3aRetrait'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.textContent = '—';
+    });
+    return;
+  }
 
   const latest     = fil[fil.length-1];
   console.log('3A fil last 3:', fil.slice(-3).map(d=>({date:d.date,v:d.versement,r:d.rendement,ret:d.retrait,total:d.total})));
@@ -2183,18 +2182,17 @@ function confirmDeleteLpp() {
 function saveP3aEntry() {
   const date      = document.getElementById('p3aFormDate').value;
   const versement = parseFloat(document.getElementById('p3aFormVersement').value) || 0;
-  const rendement = parseFloat(document.getElementById('p3aFormRendement').value) || 0;
   const dividendes= parseFloat(document.getElementById('p3aFormDividendes').value) || 0;
   const retrait   = parseFloat(document.getElementById('p3aFormRetrait').value) || 0;
   const total     = parseFloat(document.getElementById('p3aFormTotal').value) || 0;
   if (!date) { alert('Date obligatoire'); return; }
   if (!total) { alert('Total 3A obligatoire'); return; }
-  const entry = { date, versement, rendement, dividendes, retrait, total };
+  const entry = { date, versement, rendement: 0, dividendes, retrait, total };
   const idx = data3A.findIndex(d => d.date === date);
   if (idx >= 0) data3A[idx] = entry; else data3A.push(entry);
   data3A.sort((a,b) => a.date.localeCompare(b.date));
   lsSave('p3a', data3A);
-  ['p3aFormDate','p3aFormVersement','p3aFormRendement','p3aFormDividendes','p3aFormRetrait','p3aFormTotal'].forEach(id => document.getElementById(id).value = '');
+  ['p3aFormDate','p3aFormVersement','p3aFormDividendes','p3aFormRetrait','p3aFormTotal'].forEach(id => document.getElementById(id).value = '');
   closeModal('p3aModal');
   driveSaveAll();
   renderP3a();
@@ -2802,11 +2800,11 @@ async function driveSaveAll() {
 }
 
 function applyDriveData(d) {
-  if (d.lpp     && d.lpp.length)      lppData      = d.lpp;
-  if (d.salaires && d.salaires.length) salairesData = d.salaires;
-  if (d.depenses && d.depenses.length) depensesData = d.depenses;
-  if (d.p3a     && d.p3a.length)      data3A       = d.p3a;
-  if (d.invest  && d.invest.length)   investData   = d.invest;
+  if (Array.isArray(d.lpp))      lppData      = d.lpp;
+  if (Array.isArray(d.salaires)) salairesData = d.salaires;
+  if (Array.isArray(d.depenses)) depensesData = d.depenses;
+  if (Array.isArray(d.p3a))      data3A       = d.p3a;
+  if (Array.isArray(d.invest))   investData   = d.invest;
 }
 
 function refreshAllPages() {
