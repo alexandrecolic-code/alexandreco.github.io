@@ -1859,43 +1859,15 @@ function importFullJSON() {
         if (data.depenses?.length) counts.push(`${data.depenses.length} dépenses`);
         if (data.p3a?.length)      counts.push(`${data.p3a.length} entrées 3A`);
         if (data.invest?.length)   counts.push(`${data.invest.length} transactions invest`);
-        alert('✅ Import réussi !
-
-' + counts.join('
-'));
+        alert('Import réussi ! ' + counts.join(', '));
 
       } catch(err) {
-        alert('❌ Erreur import: ' + err.message);
+        alert('Erreur import: ' + err.message);
       }
     };
     r.readAsText(f);
   };
   inp.click();
-}
-
-// ── LPP local storage ──
-let lppEditDate = null; // null = new entry, date string = editing
-
-function lppCalcTotal(epargne, interets, rachat, retrait, date) {
-  // Find previous entry total
-  const existing = (lsLoad('lpp') || lppData).filter(d => d.date && d.total > 0).sort((a,b) => a.date.localeCompare(b.date));
-  const prev = existing.filter(d => d.date < date).pop();
-  const base = prev ? prev.total : 0;
-  return Math.round((base + epargne + interets + rachat - retrait) * 100) / 100;
-}
-
-function updateLppTotalPreview() {
-  const date    = document.getElementById('lppFormDate').value;
-  const epargne = parseFloat(document.getElementById('lppFormEpargne').value) || 0;
-  const interets= parseFloat(document.getElementById('lppFormInterets').value) || 0;
-  const rachat  = parseFloat(document.getElementById('lppFormRachat').value) || 0;
-  const retrait = parseFloat(document.getElementById('lppFormRetrait').value) || 0;
-  if (!date) { document.getElementById('lppFormTotalPreview').textContent = '—'; return; }
-  const total = lppCalcTotal(epargne, interets, rachat, retrait, date);
-  document.getElementById('lppFormTotalPreview').textContent = fmt(total);
-  const existing = (lsLoad('lpp') || lppData).filter(d => d.date < date && d.total > 0).sort((a,b) => a.date.localeCompare(b.date));
-  const prev = existing.pop();
-  document.getElementById('lppFormTotalBase').textContent = prev ? `Base: CHF ${fmt(prev.total)} (${new Date(prev.date).toLocaleDateString('fr-CH',{month:'short',year:'numeric'})})` : 'Base: 0 (premier mois)';
 }
 
 function openLppModal(editDate) {
