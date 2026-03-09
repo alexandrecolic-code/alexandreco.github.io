@@ -1401,15 +1401,13 @@ function renderP3a() {
     .reduce((s,d) => s + d.versement, 0);
   const resteAVerser = Math.max(0, plafond - verseAnCours);
   const pctPlafond   = Math.min(100, (verseAnCours / plafond * 100)).toFixed(0);
-  document.getElementById('p3aPlafond').textContent = `CHF ${fmt(verseAnCours)} / ${fmt(plafond)}`;
-  document.getElementById('p3aPlafond').title      = `Reste à verser : CHF ${fmt(resteAVerser)} (${pctPlafond}% atteint)`;
-  document.getElementById('p3aPlafondTitle').textContent = `Plafond ${yearNow3a}`;
-  document.getElementById('p3aPlafondBar').style.width   = pctPlafond + '%';
-  document.getElementById('p3aPlafondBar').style.background = verseAnCours >= plafond ? '#34d399' : '#a78bfa';
-  document.getElementById('p3aPlafondVerse').textContent = `Versé : CHF ${fmt(verseAnCours)}`;
-  document.getElementById('p3aPlafondMax').textContent   = `Plafond : CHF ${fmt(plafond)}`;
-  document.getElementById('p3aPlafondReste').textContent = resteAVerser > 0 ? `Reste CHF ${fmt(resteAVerser)}` : '✓ Plafond atteint';
-  document.getElementById('p3aPlafondReste').style.color = resteAVerser > 0 ? 'var(--muted)' : '#34d399';
+  const _elP = (id) => document.getElementById(id);
+  if (_elP('p3aPlafond'))      { _elP('p3aPlafond').textContent = `CHF ${fmt(verseAnCours)} / ${fmt(plafond)}`; _elP('p3aPlafond').title = `Reste : CHF ${fmt(resteAVerser)}`; }
+  if (_elP('p3aPlafondTitle')) _elP('p3aPlafondTitle').textContent = `Plafond ${yearNow3a}`;
+  if (_elP('p3aPlafondBar'))   { _elP('p3aPlafondBar').style.width = pctPlafond + '%'; _elP('p3aPlafondBar').style.background = verseAnCours >= plafond ? '#34d399' : '#a78bfa'; }
+  if (_elP('p3aPlafondVerse')) _elP('p3aPlafondVerse').textContent = `Versé : CHF ${fmt(verseAnCours)}`;
+  if (_elP('p3aPlafondMax'))   _elP('p3aPlafondMax').textContent   = `Plafond : CHF ${fmt(plafond)}`;
+  if (_elP('p3aPlafondReste')) { _elP('p3aPlafondReste').textContent = resteAVerser > 0 ? `Reste CHF ${fmt(resteAVerser)}` : '✓ Plafond atteint'; _elP('p3aPlafondReste').style.color = resteAVerser > 0 ? 'var(--muted)' : '#34d399'; }
   document.getElementById('p3aRend').style.color    = sumRend >= 0 ? '#fb923c' : '#f87171';
 
   // ── Area chart — cumul avec reset après retrait ──
