@@ -2161,14 +2161,56 @@ const DEFAULT_DATA = {
   meta:    { version:1, updatedAt: null }
 };
 
-// Token stocké en mémoire + sessionStorage pour la session
+// Token persisté dans localStorage avec expiry (55 min)
 function saveToken(token) {
   driveAccessToken = token;
-  sessionStorage.setItem('drive_token', token);
+  const expiry = Date.now() + 55 * 60 * 1000; // 55 min
+  localStorage.setItem('drive_token', token);
+  localStorage.setItem('drive_token_expiry', expiry);
+  // Schedule auto-refresh 5 min before expiry
+  setTimeout(() => silentRefresh(), 50 * 60 * 1000);
 }
 function loadToken() {
-  driveAccessToken = driveAccessToken || sessionStorage.getItem('drive_token');
-  return driveAccessToken;
+  if (driveAccessToken) return driveAccessToken;
+  const token  = localStorage.getItem('drive_token');
+  const expiry = parseInt(localStorage.getItem('drive_token_expiry') || '0');
+  if (token && Date.now() < expiry) {
+    driveAccessToken = token;
+    return token;
+  }
+  // Token expired — clear it
+  localStorage.removeItem('drive_token');
+  localStorage.removeItem('drive_token_expiry');
+  return null;
+}
+function clearToken() {
+  driveAccessToken = null;
+  localStorage.removeItem('drive_token');
+  localStorage.removeItem('drive_token_expiry');
+}
+async function silentRefresh() {
+  if (!GDRIVE_CLIENT_ID) return;
+  try {
+    await new Promise((resolve, reject) => {
+      const client = google.accounts.oauth2.initTokenClient({
+        client_id: GDRIVE_CLIENT_ID,
+        scope: GDRIVE_SCOPES,
+        prompt: '',
+        callback: (resp) => {
+          if (resp.error) { reject(resp.error); return; }
+          saveToken(resp.access_token);
+          resolve();
+        }
+      });
+      client.requestAccessToken({ prompt: '' });
+    });
+    console.log('Token silently refreshed');
+  } catch(e) {
+    console.warn('Silent refresh failed:', e);
+    clearToken();
+    updateDriveBtn(false);
+    showLoginPage();
+  }
 }
 
 function driveSignIn() {
@@ -2218,7 +2260,7 @@ async function driveRequest(method, url, body) {
   if (body !== undefined) opts.body = typeof body === 'string' ? body : JSON.stringify(body);
   const res = await fetch(url, opts);
   if (res.status === 401) {
-    driveAccessToken = null; sessionStorage.removeItem('drive_token');
+    clearToken();
     updateDriveBtn(false);
     throw new Error('Token expiré — reconnecte-toi');
   }
@@ -2375,16 +2417,30 @@ function enterDemoMode() {
   renderLpp();
 }
 
-// Try silent reconnect on load — no popup, uses existing Google session
+// Try reconnect on load
 async function tryAutoConnect() {
-  if (!GDRIVE_CLIENT_ID) return;
+  if (!GDRIVE_CLIENT_ID) { showLoginPage(); return; }
+
+  // 1. Valid token in localStorage → use it directly
+  if (loadToken()) {
+    hideLoginPage();
+    updateDriveBtn(true, true);
+    await driveSyncAll();
+    // Schedule refresh for remaining time
+    const expiry = parseInt(localStorage.getItem('drive_token_expiry') || '0');
+    const remaining = expiry - Date.now() - 5 * 60 * 1000;
+    if (remaining > 0) setTimeout(() => silentRefresh(), remaining);
+    return;
+  }
+
+  // 2. No token → try silent OAuth (works if user already granted consent)
   try {
     await new Promise((resolve, reject) => {
       const client = google.accounts.oauth2.initTokenClient({
         client_id: GDRIVE_CLIENT_ID,
         scope: GDRIVE_SCOPES,
-        prompt: '',  // silent — no popup if already consented
-        callback: async (resp) => {
+        prompt: '',
+        callback: (resp) => {
           if (resp.error) { reject(resp.error); return; }
           saveToken(resp.access_token);
           resolve();
@@ -2396,7 +2452,6 @@ async function tryAutoConnect() {
     updateDriveBtn(true, true);
     await driveSyncAll();
   } catch(e) {
-    // Silent auth failed — show login page
     console.log('Silent auth failed, showing login page:', e);
     showLoginPage();
     updateDriveBtn(false);
