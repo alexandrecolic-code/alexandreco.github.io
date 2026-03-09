@@ -2737,7 +2737,7 @@ const _from  = new Date(); _from.setDate(_from.getDate()-30);
 const _fmt   = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 document.getElementById('txFromDate').value = _fmt(_from);
 document.getElementById('txToDate').value   = _fmt(_today);
-init();
+window.addEventListener('DOMContentLoaded', init);
 </script>
 <!-- FAB LPP global -->
 <button onclick="openLppModal()" id="lppFab" style="display:none;position:fixed;bottom:80px;right:20px;width:52px;height:52px;border-radius:50%;background:#4d9fff;border:none;color:white;cursor:pointer;box-shadow:0 4px 20px rgba(77,159,255,.4);align-items:center;justify-content:center;z-index:500;transition:all .2s">
