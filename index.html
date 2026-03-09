@@ -297,6 +297,10 @@ body { font-family:'Roboto',sans-serif; background:var(--bg); color:var(--text);
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
       <span id="driveBtnLabel">Drive</span>
     </button>
+    <button onclick="importFullJSON()" id="importBtn" title="Importer JSON" style="background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:6px 10px;cursor:pointer;display:flex;align-items:center;gap:5px;font-family:Roboto,sans-serif;font-size:10px;color:var(--muted);transition:all .2s;">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Import
+    </button>
     <button onclick="toggleTheme()" id="themeBtn" style="background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:6px 12px;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:Roboto,sans-serif;font-size:11px;color:var(--muted);transition:all .2s;">
       <span id="themeIcon">☀️</span>
     </button>
@@ -316,17 +320,11 @@ body { font-family:'Roboto',sans-serif; background:var(--bg); color:var(--text);
         <div class="meta-item"><div class="meta-label">Retrait</div><div class="meta-value" style="color:#f87171" id="lppRetrait">—</div></div>
       </div>
     </div>
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-      <div class="periods" id="lppPeriods" style="margin-bottom:0;flex:1">
-        <button class="period-btn" onclick="setLppPeriod('ytd',this)">YTD</button>
-        <button class="period-btn" onclick="setLppPeriod('1y',this)">1 an</button>
-        <button class="period-btn" onclick="setLppPeriod('5y',this)">5 ans</button>
-        <button class="period-btn active" onclick="setLppPeriod('all',this)">Tout</button>
-      </div>
-      <button class="add-btn" onclick="openModal('lppModal')" style="margin-left:8px;flex-shrink:0">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Entrée
-      </button>
+    <div class="periods" id="lppPeriods">
+      <button class="period-btn" onclick="setLppPeriod('ytd',this)">YTD</button>
+      <button class="period-btn" onclick="setLppPeriod('1y',this)">1 an</button>
+      <button class="period-btn" onclick="setLppPeriod('5y',this)">5 ans</button>
+      <button class="period-btn active" onclick="setLppPeriod('all',this)">Tout</button>
     </div>
     <div class="card" style="margin-bottom:12px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
@@ -341,7 +339,40 @@ body { font-family:'Roboto',sans-serif; background:var(--bg); color:var(--text);
     <div class="card"><div class="card-title">Évolution du capital</div><div style="position:relative;height:160px"><canvas id="lppAreaChart"></canvas></div></div>
     <div class="card"><div class="card-title">Versements mensuels</div><div style="position:relative;height:140px"><canvas id="lppBarChart"></canvas></div></div>
     <div class="card"><div class="card-title">Répartition cumulée</div><div id="lppSplit"></div></div>
+
+    <!-- Lien transactions LPP -->
+    <div style="padding:0 0 8px">
+      <button onclick="showPage('lppTransactions')" style="width:100%;padding:14px;background:var(--bg2);border:1px solid var(--border);border-radius:16px;color:var(--muted);font-family:Roboto,sans-serif;font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        Transactions LPP
+      </button>
+    </div>
   </div>
+
+  <!-- FAB + -->
+  <button onclick="openLppModal()" style="position:fixed;bottom:80px;right:20px;width:52px;height:52px;border-radius:50%;background:#4d9fff;border:none;color:white;font-size:26px;cursor:pointer;box-shadow:0 4px 20px rgba(77,159,255,.4);display:flex;align-items:center;justify-content:center;z-index:100;transition:all .2s" id="lppFab">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  </button>
+</div>
+
+
+<!-- Page LPP Transactions -->
+<div class="page" id="page-lppTransactions">
+  <div style="background:var(--bg2);border-bottom:1px solid var(--border);padding:14px 16px;display:flex;align-items:center;gap:12px">
+    <button onclick="showPage('lpp')" style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:7px 12px;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:Roboto,sans-serif;font-size:11px;color:var(--muted)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      Retour
+    </button>
+    <div style="font-size:13px;font-weight:500">Transactions LPP</div>
+  </div>
+  <div class="content" style="padding-top:16px">
+    <div class="card">
+      <div id="lppTxList"></div>
+    </div>
+  </div>
+  <button onclick="openLppModal()" style="position:fixed;bottom:80px;right:20px;width:52px;height:52px;border-radius:50%;background:#4d9fff;border:none;color:white;cursor:pointer;box-shadow:0 4px 20px rgba(77,159,255,.4);display:flex;align-items:center;justify-content:center;z-index:100">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  </button>
 </div>
 
 <!-- Page Cash -->
@@ -633,36 +664,37 @@ body { font-family:'Roboto',sans-serif; background:var(--bg); color:var(--text);
 <div class="modal-overlay" id="lppModal" onclick="if(event.target===this)closeModal('lppModal')">
   <div class="modal">
     <div class="modal-title">
-      Nouvelle entrée LPP
+      <span id="lppModalTitle">Nouvelle entrée LPP</span>
       <button class="modal-close" onclick="closeModal('lppModal')">✕</button>
     </div>
     <div class="form-group">
       <label class="form-label">Date</label>
-      <input type="date" class="form-input" id="lppFormDate">
+      <input type="date" class="form-input" id="lppFormDate" oninput="updateLppTotalPreview()">
     </div>
     <div class="form-row">
       <div class="form-group">
         <label class="form-label">Épargne (CHF)</label>
-        <input type="number" step="0.01" class="form-input" id="lppFormEpargne" placeholder="0">
+        <input type="number" step="0.01" class="form-input" id="lppFormEpargne" oninput="updateLppTotalPreview()" placeholder="0">
       </div>
       <div class="form-group">
         <label class="form-label">Intérêts (CHF)</label>
-        <input type="number" step="0.01" class="form-input" id="lppFormInterets" placeholder="0">
+        <input type="number" step="0.01" class="form-input" id="lppFormInterets" oninput="updateLppTotalPreview()" placeholder="0">
       </div>
     </div>
     <div class="form-row">
       <div class="form-group">
         <label class="form-label">Rachat (CHF)</label>
-        <input type="number" step="0.01" class="form-input" id="lppFormRachat" placeholder="0">
+        <input type="number" step="0.01" class="form-input" id="lppFormRachat" oninput="updateLppTotalPreview()" placeholder="0">
       </div>
       <div class="form-group">
         <label class="form-label">Retrait (CHF)</label>
-        <input type="number" step="0.01" class="form-input" id="lppFormRetrait" placeholder="0">
+        <input type="number" step="0.01" class="form-input" id="lppFormRetrait" oninput="updateLppTotalPreview()" placeholder="0">
       </div>
     </div>
-    <div class="form-group">
-      <label class="form-label">Total LPP (CHF)</label>
-      <input type="number" step="0.01" class="form-input" id="lppFormTotal" placeholder="0">
+    <div style="background:var(--bg3);border-radius:12px;padding:12px 14px;margin-bottom:14px">
+      <div style="font-size:10px;color:var(--muted);margin-bottom:4px">Total LPP calculé automatiquement</div>
+      <div style="font-size:18px;font-weight:500;color:#4d9fff">CHF <span id="lppFormTotalPreview">—</span></div>
+      <div style="font-size:10px;color:var(--muted);margin-top:2px" id="lppFormTotalBase">Base: dernier total connu</div>
     </div>
     <button class="btn-primary" onclick="saveLppEntry()">Enregistrer</button>
   </div>
@@ -879,6 +911,10 @@ function showPage(name) {
   if (name === 'total') renderTotal();
   if (name === 'transactions') { txShortcut('30j'); }
   if (name === 'invest') renderInvest();
+  if (name === 'lppTransactions') renderLppTxList();
+  // Hide FAB on non-lpp pages
+  const fab = document.getElementById('lppFab');
+  if (fab) fab.style.display = (name === 'lpp' || name === 'lppTransactions') ? 'flex' : 'none';
 }
 
 // ════════════════════════════════════════
@@ -1773,41 +1809,140 @@ function importData(key) {
 }
 
 function exportAllData() {
-  const all = {};
-  Object.keys(LS_KEYS).forEach(k => { const d = lsLoad(k); if (d) all[k] = d; });
-  const blob = new Blob([JSON.stringify(all, null, 2)], {type:'application/json'});
+  const data = {
+    lpp: lppData, salaires: salairesData, depenses: depensesData,
+    p3a: data3A, invest: investData,
+    meta: { version:1, updatedAt: new Date().toISOString() }
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `finances_backup_${new Date().toISOString().slice(0,10)}.json`;
+  a.download = `finances_vf_${new Date().toISOString().slice(0,10)}.json`;
   a.click();
 }
 
+function importFullJSON() {
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = '.json';
+  inp.onchange = e => {
+    const f = e.target.files[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = async ev => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        // Validate structure
+        if (typeof data !== 'object') throw new Error('Format invalide');
+        let imported = 0;
+        if (data.lpp     && Array.isArray(data.lpp))      { lppData      = data.lpp;      imported++; }
+        if (data.salaires && Array.isArray(data.salaires)) { salairesData = data.salaires; imported++; }
+        if (data.depenses && Array.isArray(data.depenses)) { depensesData = data.depenses; imported++; }
+        if (data.p3a     && Array.isArray(data.p3a))      { data3A       = data.p3a;      imported++; }
+        if (data.invest  && Array.isArray(data.invest))   { investData   = data.invest;   imported++; }
+
+        // Save to Drive if connected
+        if (loadToken()) {
+          const status = document.getElementById('globalStatus');
+          status.textContent = '⏳ Sauvegarde sur Drive…';
+          await driveSaveAll();
+          status.textContent = `● Google Drive · ${new Date().toLocaleDateString('fr-CH')}`;
+        }
+
+        // Refresh UI
+        refreshAllPages();
+        renderLppTxList();
+
+        // Show confirmation
+        const counts = [];
+        if (data.lpp?.length)      counts.push(`${data.lpp.length} entrées LPP`);
+        if (data.salaires?.length) counts.push(`${data.salaires.length} salaires`);
+        if (data.depenses?.length) counts.push(`${data.depenses.length} dépenses`);
+        if (data.p3a?.length)      counts.push(`${data.p3a.length} entrées 3A`);
+        if (data.invest?.length)   counts.push(`${data.invest.length} transactions invest`);
+        alert('✅ Import réussi !
+
+' + counts.join('
+'));
+
+      } catch(err) {
+        alert('❌ Erreur import: ' + err.message);
+      }
+    };
+    r.readAsText(f);
+  };
+  inp.click();
+}
+
 // ── LPP local storage ──
+let lppEditDate = null; // null = new entry, date string = editing
+
+function lppCalcTotal(epargne, interets, rachat, retrait, date) {
+  // Find previous entry total
+  const existing = (lsLoad('lpp') || lppData).filter(d => d.date && d.total > 0).sort((a,b) => a.date.localeCompare(b.date));
+  const prev = existing.filter(d => d.date < date).pop();
+  const base = prev ? prev.total : 0;
+  return Math.round((base + epargne + interets + rachat - retrait) * 100) / 100;
+}
+
+function updateLppTotalPreview() {
+  const date    = document.getElementById('lppFormDate').value;
+  const epargne = parseFloat(document.getElementById('lppFormEpargne').value) || 0;
+  const interets= parseFloat(document.getElementById('lppFormInterets').value) || 0;
+  const rachat  = parseFloat(document.getElementById('lppFormRachat').value) || 0;
+  const retrait = parseFloat(document.getElementById('lppFormRetrait').value) || 0;
+  if (!date) { document.getElementById('lppFormTotalPreview').textContent = '—'; return; }
+  const total = lppCalcTotal(epargne, interets, rachat, retrait, date);
+  document.getElementById('lppFormTotalPreview').textContent = fmt(total);
+  const existing = (lsLoad('lpp') || lppData).filter(d => d.date < date && d.total > 0).sort((a,b) => a.date.localeCompare(b.date));
+  const prev = existing.pop();
+  document.getElementById('lppFormTotalBase').textContent = prev ? `Base: CHF ${fmt(prev.total)} (${new Date(prev.date).toLocaleDateString('fr-CH',{month:'short',year:'numeric'})})` : 'Base: 0 (premier mois)';
+}
+
+function openLppModal(editDate) {
+  lppEditDate = editDate || null;
+  document.getElementById('lppModalTitle').textContent = editDate ? 'Modifier entrée LPP' : 'Nouvelle entrée LPP';
+  if (editDate) {
+    const entry = (lsLoad('lpp') || lppData).find(d => d.date === editDate);
+    if (entry) {
+      document.getElementById('lppFormDate').value     = entry.date;
+      document.getElementById('lppFormEpargne').value  = entry.epargne || '';
+      document.getElementById('lppFormInterets').value = entry.interets || '';
+      document.getElementById('lppFormRachat').value   = entry.rachat || '';
+      document.getElementById('lppFormRetrait').value  = entry.retrait || '';
+      updateLppTotalPreview();
+    }
+  } else {
+    ['lppFormDate','lppFormEpargne','lppFormInterets','lppFormRachat','lppFormRetrait'].forEach(id => document.getElementById(id).value = '');
+    const t = new Date();
+    document.getElementById('lppFormDate').value = `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
+    updateLppTotalPreview();
+  }
+  document.getElementById('lppModal').classList.add('open');
+}
+
 function saveLppEntry() {
   const date    = document.getElementById('lppFormDate').value;
   const epargne = parseFloat(document.getElementById('lppFormEpargne').value) || 0;
   const interets= parseFloat(document.getElementById('lppFormInterets').value) || 0;
   const rachat  = parseFloat(document.getElementById('lppFormRachat').value) || 0;
   const retrait = parseFloat(document.getElementById('lppFormRetrait').value) || 0;
-  const total   = parseFloat(document.getElementById('lppFormTotal').value) || 0;
   if (!date) { alert('Date obligatoire'); return; }
-  if (!total) { alert('Le total LPP est obligatoire'); return; }
+  const total = lppCalcTotal(epargne, interets, rachat, retrait, date);
 
   const existing = lsLoad('lpp') || [];
-  const idx = existing.findIndex(d => d.date === date);
+  // If editing, remove old entry first
+  const filtered = lppEditDate ? existing.filter(d => d.date !== lppEditDate) : existing;
+  const idx = filtered.findIndex(d => d.date === date);
   const entry = { date, epargne, interets, rachat, retrait, total };
-  if (idx >= 0) existing[idx] = entry; else existing.push(entry);
-  existing.sort((a,b) => a.date.localeCompare(b.date));
-  lsSave('lpp', existing);
+  if (idx >= 0) filtered[idx] = entry; else filtered.push(entry);
+  filtered.sort((a,b) => a.date.localeCompare(b.date));
+  lsSave('lpp', filtered);
 
-  // Clear form
-  ['lppFormEpargne','lppFormInterets','lppFormRachat','lppFormRetrait','lppFormTotal'].forEach(id => document.getElementById(id).value = '');
   closeModal('lppModal');
-  // Apply to in-memory lppData
-  const lppLocal = lsLoad('lpp') || [];
-  if (lppLocal.length) lppData = lppLocal;
+  lppData = filtered;
   driveSaveAll();
   renderLpp();
+  renderLppTxList();
 }
 
 function deleteLppEntry(date) {
@@ -1817,24 +1952,38 @@ function deleteLppEntry(date) {
   lppData = data;
   driveSaveAll();
   renderLpp();
+  renderLppTxList();
 }
 
 function renderLppDataList() {
-  const data = lsLoad('lpp') || [];
-  const el = document.getElementById('lppDataList');
+  // kept for compatibility, calls renderLppTxList
+  renderLppTxList();
+}
+
+function renderLppTxList() {
+  const el = document.getElementById('lppTxList');
   if (!el) return;
+  const data = [...(lsLoad('lpp') || lppData)].sort((a,b) => b.date.localeCompare(a.date));
   if (!data.length) {
-    el.innerHTML = '<div style="color:var(--muted);font-size:11px;text-align:center;padding:12px">Aucune donnée locale — utilise Google Sheets ou ajoute une entrée</div>';
+    el.innerHTML = '<div style="color:var(--muted);font-size:12px;text-align:center;padding:20px">Aucune transaction — appuie sur + pour ajouter</div>';
     return;
   }
-  const sorted = [...data].sort((a,b) => b.date.localeCompare(a.date));
-  el.innerHTML = sorted.map(d => `
-    <div class="data-row">
-      <div>
-        <div style="color:var(--muted);font-size:10px">${new Date(d.date).toLocaleDateString('fr-CH',{month:'short',year:'numeric'})}</div>
-        <div>Total: <strong>CHF ${fmt(d.total)}</strong> · Ép: ${fmt(d.epargne)} · Int: ${fmt(d.interets)}</div>
+  el.innerHTML = data.map(d => `
+    <div class="tx-row">
+      <div style="flex:1">
+        <div style="font-size:11px;color:var(--muted)">${new Date(d.date).toLocaleDateString('fr-CH',{month:'long',year:'numeric'})}</div>
+        <div style="font-size:13px;font-weight:500;margin:2px 0">CHF ${fmt(d.total)}</div>
+        <div style="font-size:10px;color:var(--muted)">
+          ${d.epargne ? '📈 Ép. '+fmt(d.epargne) : ''}
+          ${d.interets ? ' · 💰 Int. '+fmt(d.interets) : ''}
+          ${d.rachat ? ' · 🔄 Rachat '+fmt(d.rachat) : ''}
+          ${d.retrait ? ' · ⬇️ Retrait '+fmt(d.retrait) : ''}
+        </div>
       </div>
-      <button class="btn-danger" onclick="deleteLppEntry('${d.date}')">✕</button>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button onclick="openLppModal('${d.date}')" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:11px;color:var(--muted);font-family:Roboto,sans-serif">✏️</button>
+        <button class="btn-danger" onclick="deleteLppEntry('${d.date}')">✕</button>
+      </div>
     </div>`).join('');
 }
 
