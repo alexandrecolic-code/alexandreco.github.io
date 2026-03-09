@@ -340,12 +340,7 @@ body { font-family:'Roboto',sans-serif; background:var(--bg); color:var(--text);
     </div>
   </div>
 
-  <!-- FAB + -->
-  <button onclick="openLppModal()" style="position:fixed;bottom:80px;right:20px;width:52px;height:52px;border-radius:50%;background:#4d9fff;border:none;color:white;font-size:26px;cursor:pointer;box-shadow:0 4px 20px rgba(77,159,255,.4);display:flex;align-items:center;justify-content:center;z-index:100;transition:all .2s" id="lppFab">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-  </button>
 </div>
-
 
 <!-- Page LPP Transactions -->
 <div class="page" id="page-lppTransactions">
@@ -361,9 +356,52 @@ body { font-family:'Roboto',sans-serif; background:var(--bg); color:var(--text);
       <div id="lppTxList"></div>
     </div>
   </div>
-  <button onclick="openLppModal()" style="position:fixed;bottom:80px;right:20px;width:52px;height:52px;border-radius:50%;background:#4d9fff;border:none;color:white;cursor:pointer;box-shadow:0 4px 20px rgba(77,159,255,.4);display:flex;align-items:center;justify-content:center;z-index:100">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-  </button>
+</div>
+
+<!-- Page LPP Edit -->
+<div class="page" id="page-lppEdit">
+  <div style="background:var(--bg2);border-bottom:1px solid var(--border);padding:14px 16px;display:flex;align-items:center;gap:12px">
+    <button onclick="showPage('lppTransactions')" style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:7px 12px;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:Roboto,sans-serif;font-size:11px;color:var(--muted)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      Retour
+    </button>
+    <div style="font-size:13px;font-weight:500" id="lppEditTitle">Modifier entrée</div>
+  </div>
+  <div class="content" style="padding-top:20px">
+    <div class="card">
+      <div class="form-group">
+        <label class="form-label">Date</label>
+        <input type="date" class="form-input" id="lppEditDate" oninput="updateLppEditPreview()">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Épargne (CHF)</label>
+          <input type="number" step="0.01" class="form-input" id="lppEditEpargne" oninput="updateLppEditPreview()" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Intérêts (CHF)</label>
+          <input type="number" step="0.01" class="form-input" id="lppEditInterets" oninput="updateLppEditPreview()" placeholder="0">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Rachat (CHF)</label>
+          <input type="number" step="0.01" class="form-input" id="lppEditRachat" oninput="updateLppEditPreview()" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Retrait (CHF)</label>
+          <input type="number" step="0.01" class="form-input" id="lppEditRetrait" oninput="updateLppEditPreview()" placeholder="0">
+        </div>
+      </div>
+      <div style="background:var(--bg3);border-radius:12px;padding:12px 14px;margin:8px 0 16px">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:4px">Total calculé</div>
+        <div style="font-size:20px;font-weight:600;color:#4d9fff">CHF <span id="lppEditTotalPreview">—</span></div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px" id="lppEditBase"></div>
+      </div>
+      <button onclick="saveLppEdit()" style="width:100%;padding:14px;background:#4d9fff;border:none;border-radius:14px;color:white;font-size:14px;font-weight:600;cursor:pointer;font-family:Roboto,sans-serif;margin-bottom:12px">Enregistrer</button>
+      <button onclick="confirmDeleteLpp()" style="width:100%;padding:14px;background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.3);border-radius:14px;color:#f87171;font-size:14px;font-weight:500;cursor:pointer;font-family:Roboto,sans-serif">Supprimer</button>
+    </div>
+  </div>
 </div>
 
 <!-- Page Cash -->
@@ -906,7 +944,7 @@ function showPage(name) {
   // Hide FAB on non-lpp pages
   const fab = document.getElementById('lppFab');
   if (fab) fab.style.display = (name === 'lpp' || name === 'lppTransactions') ? 'flex' : 'none';
-  // Remove second FAB on transactions page (keep only main one)
+  if (name === 'lppEdit' && fab) fab.style.display = 'none';
 }
 
 // ════════════════════════════════════════
@@ -1934,22 +1972,81 @@ function renderLppTxList() {
     return;
   }
   el.innerHTML = data.map(d => `
-    <div class="tx-row">
+    <div class="tx-row" style="cursor:pointer;padding:14px 4px" onclick="showLppEdit('${d.date}')">
       <div style="flex:1">
-        <div style="font-size:11px;color:var(--muted)">${new Date(d.date).toLocaleDateString('fr-CH',{month:'long',year:'numeric'})}</div>
-        <div style="font-size:13px;font-weight:500;margin:2px 0">CHF ${fmt(d.total)}</div>
-        <div style="font-size:10px;color:var(--muted)">
-          ${d.epargne ? '📈 Ép. '+fmt(d.epargne) : ''}
-          ${d.interets ? ' · 💰 Int. '+fmt(d.interets) : ''}
-          ${d.rachat ? ' · 🔄 Rachat '+fmt(d.rachat) : ''}
-          ${d.retrait ? ' · ⬇️ Retrait '+fmt(d.retrait) : ''}
+        <div style="font-size:11px;color:var(--muted);margin-bottom:2px">${new Date(d.date).toLocaleDateString('fr-CH',{month:'long',year:'numeric'})}</div>
+        <div style="font-size:15px;font-weight:600">CHF ${fmt(d.total)}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px">
+          ${[d.epargne?'Ép. '+fmt(d.epargne):'', d.interets?'Int. '+fmt(d.interets):'', d.rachat?'Rachat '+fmt(d.rachat):'', d.retrait?'Retrait '+fmt(d.retrait):''].filter(Boolean).join(' · ')}
         </div>
       </div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <button onclick="openLppModal('${d.date}')" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:11px;color:var(--muted);font-family:Roboto,sans-serif">✏️</button>
-        <button class="btn-danger" onclick="deleteLppEntry('${d.date}')">✕</button>
-      </div>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>`).join('');
+}
+
+let lppEditOrigDate = null;
+
+function showLppEdit(date) {
+  lppEditOrigDate = date;
+  const entry = lppData.find(d => d.date === date);
+  if (!entry) return;
+  document.getElementById('lppEditTitle').textContent = new Date(date).toLocaleDateString('fr-CH',{month:'long',year:'numeric'});
+  document.getElementById('lppEditDate').value     = entry.date;
+  document.getElementById('lppEditEpargne').value  = entry.epargne || '';
+  document.getElementById('lppEditInterets').value = entry.interets || '';
+  document.getElementById('lppEditRachat').value   = entry.rachat || '';
+  document.getElementById('lppEditRetrait').value  = entry.retrait || '';
+  updateLppEditPreview();
+  showPage('lppEdit');
+}
+
+function updateLppEditPreview() {
+  const date    = document.getElementById('lppEditDate').value;
+  const epargne = parseFloat(document.getElementById('lppEditEpargne').value) || 0;
+  const interets= parseFloat(document.getElementById('lppEditInterets').value) || 0;
+  const rachat  = parseFloat(document.getElementById('lppEditRachat').value) || 0;
+  const retrait = parseFloat(document.getElementById('lppEditRetrait').value) || 0;
+  if (!date) return;
+  // Exclude current entry from base calculation
+  const others = lppData.filter(d => d.date !== lppEditOrigDate && d.date < date && d.total > 0).sort((a,b)=>a.date.localeCompare(b.date));
+  const prev = others[others.length-1];
+  const base = prev ? prev.total : 0;
+  const total = Math.round((base + epargne + interets + rachat - retrait)*100)/100;
+  document.getElementById('lppEditTotalPreview').textContent = fmt(total);
+  document.getElementById('lppEditBase').textContent = prev ? `Base: CHF ${fmt(prev.total)} (${new Date(prev.date).toLocaleDateString('fr-CH',{month:'short',year:'numeric'})})` : 'Base: 0 (premier mois)';
+}
+
+function saveLppEdit() {
+  const date    = document.getElementById('lppEditDate').value;
+  const epargne = parseFloat(document.getElementById('lppEditEpargne').value) || 0;
+  const interets= parseFloat(document.getElementById('lppEditInterets').value) || 0;
+  const rachat  = parseFloat(document.getElementById('lppEditRachat').value) || 0;
+  const retrait = parseFloat(document.getElementById('lppEditRetrait').value) || 0;
+  if (!date) return;
+  const others = lppData.filter(d => d.date !== lppEditOrigDate && d.date < date && d.total > 0).sort((a,b)=>a.date.localeCompare(b.date));
+  const prev = others[others.length-1];
+  const total = Math.round(((prev?prev.total:0) + epargne + interets + rachat - retrait)*100)/100;
+  const entry = { date, epargne, interets, rachat, retrait, total };
+  let updated = lppData.filter(d => d.date !== lppEditOrigDate);
+  const idx = updated.findIndex(d => d.date === date);
+  if (idx >= 0) updated[idx] = entry; else updated.push(entry);
+  updated.sort((a,b) => a.date.localeCompare(b.date));
+  lppData = updated;
+  lsSave('lpp', lppData);
+  driveSaveAll();
+  renderLpp();
+  renderLppTxList();
+  showPage('lppTransactions');
+}
+
+function confirmDeleteLpp() {
+  if (!confirm('Supprimer cette entrée ?')) return;
+  lppData = lppData.filter(d => d.date !== lppEditOrigDate);
+  lsSave('lpp', lppData);
+  driveSaveAll();
+  renderLpp();
+  renderLppTxList();
+  showPage('lppTransactions');
 }
 
 function loadLocalData() {
@@ -2599,5 +2696,9 @@ document.getElementById('txFromDate').value = _fmt(_from);
 document.getElementById('txToDate').value   = _fmt(_today);
 init();
 </script>
+<!-- FAB LPP global -->
+<button onclick="openLppModal()" id="lppFab" style="display:none;position:fixed;bottom:80px;right:20px;width:52px;height:52px;border-radius:50%;background:#4d9fff;border:none;color:white;cursor:pointer;box-shadow:0 4px 20px rgba(77,159,255,.4);align-items:center;justify-content:center;z-index:500;transition:all .2s">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+</button>
 </body>
 </html>
