@@ -1900,6 +1900,31 @@ function importFullJSON() {
   inp.click();
 }
 
+function lppCalcTotal(epargne, interets, rachat, retrait, date, excludeDate=null) {
+  const existing = [...lppData].filter(d => d.date && d.total > 0 && d.date < date && d.date !== excludeDate)
+                               .sort((a,b) => a.date.localeCompare(b.date));
+  const prev = existing[existing.length - 1];
+  const base = prev ? prev.total : 0;
+  return Math.round((base + epargne + interets + rachat - retrait) * 100) / 100;
+}
+
+function updateLppTotalPreview() {
+  const date    = document.getElementById('lppFormDate').value;
+  const epargne = parseFloat(document.getElementById('lppFormEpargne').value) || 0;
+  const interets= parseFloat(document.getElementById('lppFormInterets').value) || 0;
+  const rachat  = parseFloat(document.getElementById('lppFormRachat').value) || 0;
+  const retrait = parseFloat(document.getElementById('lppFormRetrait').value) || 0;
+  const preview = document.getElementById('lppFormTotalPreview');
+  const baseEl  = document.getElementById('lppFormTotalBase');
+  if (!preview) return;
+  if (!date) { preview.textContent = '—'; return; }
+  const total = lppCalcTotal(epargne, interets, rachat, retrait, date, lppEditDate);
+  preview.textContent = fmt(total);
+  const prev = [...lppData].filter(d => d.date && d.total > 0 && d.date < date && d.date !== lppEditDate)
+                            .sort((a,b) => a.date.localeCompare(b.date)).pop();
+  if (baseEl) baseEl.textContent = prev ? `Base: CHF ${fmt(prev.total)} (${new Date(prev.date).toLocaleDateString('fr-CH',{month:'short',year:'numeric'})})` : 'Base: 0 (premier mois)';
+}
+
 function openLppModal(editDate) {
   lppEditDate = editDate || null;
   document.getElementById('lppModalTitle').textContent = editDate ? 'Modifier entrée LPP' : 'Nouvelle entrée LPP';
