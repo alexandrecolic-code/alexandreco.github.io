@@ -326,16 +326,7 @@ body { font-family:'Roboto',sans-serif; background:var(--bg); color:var(--text);
       <button class="period-btn" onclick="setLppPeriod('5y',this)">5 ans</button>
       <button class="period-btn active" onclick="setLppPeriod('all',this)">Tout</button>
     </div>
-    <div class="card" style="margin-bottom:12px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-        <div class="card-title" style="margin-bottom:0">Données saisies</div>
-        <div style="display:flex;gap:8px">
-          <button onclick="exportData('lpp')" style="font-size:10px;padding:4px 8px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--muted);cursor:pointer;font-family:Roboto,sans-serif">Export</button>
-          <button onclick="importData('lpp')" style="font-size:10px;padding:4px 8px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--muted);cursor:pointer;font-family:Roboto,sans-serif">Import</button>
-        </div>
-      </div>
-      <div id="lppDataList" style="max-height:180px;overflow-y:auto"></div>
-    </div>
+    <div id="lppDataList" style="display:none"></div>
     <div class="card"><div class="card-title">Évolution du capital</div><div style="position:relative;height:160px"><canvas id="lppAreaChart"></canvas></div></div>
     <div class="card"><div class="card-title">Versements mensuels</div><div style="position:relative;height:140px"><canvas id="lppBarChart"></canvas></div></div>
     <div class="card"><div class="card-title">Répartition cumulée</div><div id="lppSplit"></div></div>
@@ -915,6 +906,7 @@ function showPage(name) {
   // Hide FAB on non-lpp pages
   const fab = document.getElementById('lppFab');
   if (fab) fab.style.display = (name === 'lpp' || name === 'lppTransactions') ? 'flex' : 'none';
+  // Remove second FAB on transactions page (keep only main one)
 }
 
 // ════════════════════════════════════════
@@ -1874,7 +1866,7 @@ function openLppModal(editDate) {
   lppEditDate = editDate || null;
   document.getElementById('lppModalTitle').textContent = editDate ? 'Modifier entrée LPP' : 'Nouvelle entrée LPP';
   if (editDate) {
-    const entry = (lsLoad('lpp') || lppData).find(d => d.date === editDate);
+    const entry = lppData.find(d => d.date === editDate);
     if (entry) {
       document.getElementById('lppFormDate').value     = entry.date;
       document.getElementById('lppFormEpargne').value  = entry.epargne || '';
@@ -1901,17 +1893,17 @@ function saveLppEntry() {
   if (!date) { alert('Date obligatoire'); return; }
   const total = lppCalcTotal(epargne, interets, rachat, retrait, date);
 
-  const existing = lsLoad('lpp') || [];
+  // Work directly with lppData (source of truth)
+  const existing = [...lppData];
   // If editing, remove old entry first
   const filtered = lppEditDate ? existing.filter(d => d.date !== lppEditDate) : existing;
   const idx = filtered.findIndex(d => d.date === date);
   const entry = { date, epargne, interets, rachat, retrait, total };
   if (idx >= 0) filtered[idx] = entry; else filtered.push(entry);
   filtered.sort((a,b) => a.date.localeCompare(b.date));
-  lsSave('lpp', filtered);
-
-  closeModal('lppModal');
   lppData = filtered;
+  lsSave('lpp', filtered);
+  closeModal('lppModal');
   driveSaveAll();
   renderLpp();
   renderLppTxList();
@@ -1919,9 +1911,9 @@ function saveLppEntry() {
 
 function deleteLppEntry(date) {
   if (!confirm('Supprimer cette entrée ?')) return;
-  const data = (lsLoad('lpp') || []).filter(d => d.date !== date);
-  lsSave('lpp', data);
+  const data = lppData.filter(d => d.date !== date);
   lppData = data;
+  lsSave('lpp', data);
   driveSaveAll();
   renderLpp();
   renderLppTxList();
@@ -1935,7 +1927,8 @@ function renderLppDataList() {
 function renderLppTxList() {
   const el = document.getElementById('lppTxList');
   if (!el) return;
-  const data = [...(lsLoad('lpp') || lppData)].sort((a,b) => b.date.localeCompare(a.date));
+  // Always use lppData (in-memory source of truth, synced with Drive)
+  const data = [...lppData].filter(d => d.date).sort((a,b) => b.date.localeCompare(a.date));
   if (!data.length) {
     el.innerHTML = '<div style="color:var(--muted);font-size:12px;text-align:center;padding:20px">Aucune transaction — appuie sur + pour ajouter</div>';
     return;
