@@ -951,10 +951,10 @@ const DEMO_3A = (() => {
 // ════════════════════════════════════════
 //  STATE
 // ════════════════════════════════════════
-let lppData      = DEMO_LPP;
+let lppData      = [];
 let data3A       = [];
-let salairesData = DEMO_SALAIRES;
-let depensesData = DEMO_DEPENSES;
+let salairesData = [];
+let depensesData = [];
 
 // Demo invest data
 const DEMO_INVEST = [
@@ -968,7 +968,7 @@ const DEMO_INVEST = [
   {date:'2025-09-05',ticker:'CSPX',nom:'iShares Core S&P 500',   type:'achat',  quantite:3,  prix:530.00,frais:9.90, devise:'USD'},
   {date:'2025-11-20',ticker:'VWRL',nom:'Vanguard FTSE All-World',type:'achat',  quantite:6,  prix:118.50,frais:9.90, devise:'CHF'},
 ];
-let investData   = DEMO_INVEST;
+let investData   = [];
 let investPeriod = 'all';
 let investLineC  = null, investBarC = null;
 
@@ -1030,7 +1030,8 @@ function showPage(name) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
-  document.getElementById('nav-'+name).classList.add('active');
+  const navBtn = document.getElementById('nav-'+name);
+  if (navBtn) navBtn.classList.add('active');
   if (name === 'lpp')  renderLpp();
   if (name === 'cash') renderCash();
   if (name === '3a') renderP3a();
