@@ -2031,6 +2031,16 @@ function lppCalcTotal(epargne, interets, rachat, retrait, date, excludeDate=null
   return Math.round((base + epargne + interets + rachat - retrait) * 100) / 100;
 }
 
+function recalcLppTotals(data) {
+  // Recalcule tous les totaux en cascade après tri chronologique
+  const sorted = [...data].sort((a,b) => a.date.localeCompare(b.date));
+  let running = 0;
+  return sorted.map(d => {
+    running = Math.round((running + (d.epargne||0) + (d.interets||0) + (d.rachat||0) - (d.retrait||0)) * 100) / 100;
+    return { ...d, total: running };
+  });
+}
+
 function updateLppTotalPreview() {
   const epargne = parseFloat(document.getElementById('lppFormEpargne').value) || 0;
   const interets= parseFloat(document.getElementById('lppFormInterets').value) || 0;
@@ -2085,9 +2095,9 @@ function saveLppEntry() {
   const idx = filtered.findIndex(d => d.date === date);
   const entry = { date, epargne, interets, rachat, retrait, total };
   if (idx >= 0) filtered[idx] = entry; else filtered.push(entry);
-  filtered.sort((a,b) => a.date.localeCompare(b.date));
-  lppData = filtered;
-  lsSave('lpp', filtered);
+  const recalculated = recalcLppTotals(filtered);
+  lppData = recalculated;
+  lsSave('lpp', recalculated);
   closeModal('lppModal');
   driveSaveAll();
   renderLpp();
@@ -2096,9 +2106,9 @@ function saveLppEntry() {
 
 function deleteLppEntry(date) {
   if (!confirm('Supprimer cette entrée ?')) return;
-  const data = lppData.filter(d => d.date !== date);
-  lppData = data;
-  lsSave('lpp', data);
+  const recalculated = recalcLppTotals(lppData.filter(d => d.date !== date));
+  lppData = recalculated;
+  lsSave('lpp', recalculated);
   driveSaveAll();
   renderLpp();
   renderLppTxList();
@@ -2177,9 +2187,9 @@ function saveLppEdit() {
   let updated = lppData.filter(d => d.date !== lppEditOrigDate);
   const idx = updated.findIndex(d => d.date === date);
   if (idx >= 0) updated[idx] = entry; else updated.push(entry);
-  updated.sort((a,b) => a.date.localeCompare(b.date));
-  lppData = updated;
-  lsSave('lpp', lppData);
+  const recalculated = recalcLppTotals(updated);
+  lppData = recalculated;
+  lsSave('lpp', recalculated);
   driveSaveAll();
   renderLpp();
   renderLppTxList();
