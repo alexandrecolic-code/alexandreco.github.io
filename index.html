@@ -6,7 +6,7 @@
 <title>Finances VF</title>
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://accounts.google.com/gsi/client"></script>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 html, body { height:100%; }
@@ -2538,23 +2538,31 @@ function hideLoginPage() {
   document.getElementById('loginPage').classList.remove('visible');
 }
 
+function waitForGSI(cb, tries=0) {
+  if (window.google?.accounts?.oauth2) { cb(); return; }
+  if (tries > 20) { alert('Librairie Google non chargée. Vérifie ta connexion internet.'); return; }
+  setTimeout(() => waitForGSI(cb, tries+1), 200);
+}
+
 function loginWithGoogle() {
   if (!GDRIVE_CLIENT_ID) {
-    alert('Client ID Google non configuré.\nAjoute ton Client ID OAuth dans le code.');
+    alert('Client ID Google non configuré.');
     return;
   }
-  const client = google.accounts.oauth2.initTokenClient({
-    client_id: GDRIVE_CLIENT_ID,
-    scope: GDRIVE_SCOPES,
-    callback: async (resp) => {
-      if (resp.error) { console.error('OAuth error:', resp); return; }
-      saveToken(resp.access_token);
-      hideLoginPage();
-      updateDriveBtn(true, true);
-      await driveSyncAll();
-    }
+  waitForGSI(() => {
+    const client = google.accounts.oauth2.initTokenClient({
+      client_id: GDRIVE_CLIENT_ID,
+      scope: GDRIVE_SCOPES,
+      callback: async (resp) => {
+        if (resp.error) { console.error('OAuth error:', resp); return; }
+        saveToken(resp.access_token);
+        hideLoginPage();
+        updateDriveBtn(true, true);
+        await driveSyncAll();
+      }
+    });
+    client.requestAccessToken({ prompt: 'select_account' });
   });
-  client.requestAccessToken({ prompt: 'select_account' });
 }
 
 function enterDemoMode() {
@@ -2567,22 +2575,24 @@ function enterDemoMode() {
 }
 
 // Try reconnect on load
-async function tryAutoConnect() {
+function tryAutoConnect() {
   if (!GDRIVE_CLIENT_ID) { showLoginPage(); return; }
+  waitForGSI(() => _doAutoConnect());
+}
 
+async function _doAutoConnect() {
   // 1. Valid token in localStorage → use it directly
   if (loadToken()) {
     hideLoginPage();
     updateDriveBtn(true, true);
     await driveSyncAll();
-    // Schedule refresh for remaining time
     const expiry = parseInt(localStorage.getItem('drive_token_expiry') || '0');
     const remaining = expiry - Date.now() - 5 * 60 * 1000;
     if (remaining > 0) setTimeout(() => silentRefresh(), remaining);
     return;
   }
 
-  // 2. No token → try silent OAuth (works if user already granted consent)
+  // 2. No token → try silent OAuth
   try {
     await new Promise((resolve, reject) => {
       const client = google.accounts.oauth2.initTokenClient({
@@ -2601,7 +2611,7 @@ async function tryAutoConnect() {
     updateDriveBtn(true, true);
     await driveSyncAll();
   } catch(e) {
-    console.log('Silent auth failed, showing login page:', e);
+    console.log('Silent auth failed:', e);
     showLoginPage();
     updateDriveBtn(false);
   }
