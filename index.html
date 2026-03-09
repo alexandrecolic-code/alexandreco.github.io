@@ -806,20 +806,21 @@ body { font-family:'Roboto',sans-serif; background:var(--bg); color:var(--text);
     <div class="form-row">
       <div class="form-group">
         <label class="form-label">Versement (CHF)</label>
-        <input type="number" step="0.01" class="form-input" id="p3aFormVersement" placeholder="0">
+        <input type="number" step="0.01" class="form-input" id="p3aFormVersement" oninput="updateP3aTotalPreview()" placeholder="0">
       </div>
       <div class="form-group">
         <label class="form-label">Dividendes (CHF)</label>
-        <input type="number" step="0.01" class="form-input" id="p3aFormDividendes" placeholder="0">
+        <input type="number" step="0.01" class="form-input" id="p3aFormDividendes" oninput="updateP3aTotalPreview()" placeholder="0">
       </div>
     </div>
     <div class="form-group">
       <label class="form-label">Retrait (CHF)</label>
-      <input type="number" step="0.01" class="form-input" id="p3aFormRetrait" placeholder="0">
+      <input type="number" step="0.01" class="form-input" id="p3aFormRetrait" oninput="updateP3aTotalPreview()" placeholder="0">
     </div>
-    <div class="form-group">
-      <label class="form-label">Total 3A (CHF)</label>
-      <input type="number" step="0.01" class="form-input" id="p3aFormTotal" placeholder="0">
+    <div style="background:var(--bg3);border-radius:12px;padding:12px 14px;margin-bottom:14px">
+      <div style="font-size:10px;color:var(--muted);margin-bottom:4px">Total 3A calculé automatiquement</div>
+      <div style="font-size:18px;font-weight:500;color:#fb923c">CHF <span id="p3aFormTotalPreview">—</span></div>
+      <div style="font-size:10px;color:var(--muted);margin-top:2px" id="p3aFormTotalBase">Base: dernier total connu</div>
     </div>
     <button class="btn-primary" style="background:#fb923c" onclick="saveP3aEntry()">Enregistrer</button>
   </div>
@@ -2179,24 +2180,54 @@ function confirmDeleteLpp() {
 }
 
 // ── 3A CRUD ──
+function updateP3aTotalPreview() {
+  const versement  = parseFloat(document.getElementById('p3aFormVersement').value) || 0;
+  const dividendes = parseFloat(document.getElementById('p3aFormDividendes').value) || 0;
+  const retrait    = parseFloat(document.getElementById('p3aFormRetrait').value) || 0;
+  const preview = document.getElementById('p3aFormTotalPreview');
+  const baseEl  = document.getElementById('p3aFormTotalBase');
+  if (!preview) return;
+  const last = [...data3A].filter(d => d.total > 0).sort((a,b) => a.date.localeCompare(b.date)).pop();
+  const base = last ? last.total : 0;
+  const total = Math.round((base + versement + dividendes - retrait) * 100) / 100;
+  preview.textContent = fmt(total);
+  if (baseEl) baseEl.textContent = last
+    ? `Base: CHF ${fmt(base)} (${new Date(last.date).toLocaleDateString('fr-CH',{month:'short',year:'numeric'})})`
+    : 'Base: 0 (première entrée)';
+}
+
 function saveP3aEntry() {
   const date      = document.getElementById('p3aFormDate').value;
   const versement = parseFloat(document.getElementById('p3aFormVersement').value) || 0;
   const dividendes= parseFloat(document.getElementById('p3aFormDividendes').value) || 0;
   const retrait   = parseFloat(document.getElementById('p3aFormRetrait').value) || 0;
-  const total     = parseFloat(document.getElementById('p3aFormTotal').value) || 0;
   if (!date) { alert('Date obligatoire'); return; }
-  if (!total) { alert('Total 3A obligatoire'); return; }
+  const last = [...data3A].filter(d => d.total > 0).sort((a,b) => a.date.localeCompare(b.date)).pop();
+  const base  = last ? last.total : 0;
+  const total = Math.round((base + versement + dividendes - retrait) * 100) / 100;
   const entry = { date, versement, rendement: 0, dividendes, retrait, total };
   const idx = data3A.findIndex(d => d.date === date);
   if (idx >= 0) data3A[idx] = entry; else data3A.push(entry);
   data3A.sort((a,b) => a.date.localeCompare(b.date));
   lsSave('p3a', data3A);
-  ['p3aFormDate','p3aFormVersement','p3aFormDividendes','p3aFormRetrait','p3aFormTotal'].forEach(id => document.getElementById(id).value = '');
+  ['p3aFormDate','p3aFormVersement','p3aFormDividendes','p3aFormRetrait'].forEach(id => document.getElementById(id).value = '');
   closeModal('p3aModal');
   driveSaveAll();
   renderP3a();
   renderP3aTxList();
+  // Navigate to transactions to confirm
+  showPage('p3aTransactions');
+}
+
+function openP3aModal() {
+  ['p3aFormVersement','p3aFormDividendes','p3aFormRetrait'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  const t = new Date();
+  const dateEl = document.getElementById('p3aFormDate');
+  if (dateEl) dateEl.value = `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
+  updateP3aTotalPreview();
+  document.getElementById('p3aModal').classList.add('open');
 }
 
 function renderP3aTxList() {
@@ -2929,7 +2960,7 @@ window.addEventListener('DOMContentLoaded', init);
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
 </button>
 <!-- FAB 3A global -->
-<button onclick="openModal('p3aModal')" id="p3aFab" style="display:none;position:fixed;bottom:80px;right:20px;width:52px;height:52px;border-radius:50%;background:#fb923c;border:none;color:white;cursor:pointer;box-shadow:0 4px 20px rgba(251,146,60,.4);align-items:center;justify-content:center;z-index:500;transition:all .2s">
+<button onclick="openP3aModal()" id="p3aFab" style="display:none;position:fixed;bottom:80px;right:20px;width:52px;height:52px;border-radius:50%;background:#fb923c;border:none;color:white;cursor:pointer;box-shadow:0 4px 20px rgba(251,146,60,.4);align-items:center;justify-content:center;z-index:500;transition:all .2s">
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
 </button>
 </body>
