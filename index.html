@@ -2349,51 +2349,34 @@ function exportAllData() {
 async function importFullJSON() {
   const inp = document.createElement('input');
   inp.type = 'file'; inp.accept = '.json';
-  inp.onchange = e => {
-    const f = e.target.files[0];
-    if (!f) return;
-    const r = new FileReader();
-    r.onload = async ev => {
-      try {
-        const data = JSON.parse(ev.target.result);
-        // Validate structure
-        if (typeof data !== 'object') throw new Error('Format invalide');
-        let imported = 0;
-        if (data.lpp     && Array.isArray(data.lpp))      { lppData      = recalcLppTotals(data.lpp); imported++; }
-        if (data.salaires && Array.isArray(data.salaires)) { salairesData = data.salaires; imported++; }
-        if (data.depenses && Array.isArray(data.depenses)) { depensesData = data.depenses; imported++; }
-        if (data.p3a     && Array.isArray(data.p3a))      { data3A       = recalcP3aTotals(data.p3a); imported++; }
-        if (data.invest  && Array.isArray(data.invest))   { investData   = data.invest;   imported++; }
-
-        // Save to Drive if connected
-        if (loadToken()) {
-          const status = document.getElementById('globalStatus');
-          status.textContent = '⏳ Sauvegarde sur Drive…';
-          await driveSaveAll();
-          status.textContent = `● Google Drive · ${new Date().toLocaleDateString('fr-CH')}`;
-        }
-
-        // Refresh UI
-        refreshAllPages();
-        renderLppTxList();
-
-        // Show confirmation
-        const counts = [];
-        if (data.lpp?.length)      counts.push(`${data.lpp.length} entrées LPP`);
-        if (data.salaires?.length) counts.push(`${data.salaires.length} salaires`);
-        if (data.depenses?.length) counts.push(`${data.depenses.length} dépenses`);
-        if (data.p3a?.length)      counts.push(`${data.p3a.length} entrées 3A`);
-        if (data.invest?.length)   counts.push(`${data.invest.length} transactions invest`);
-        alert('Import réussi ! ' + counts.join(', '));
-
-      } catch(err) {
-        alert('Erreur import: ' + err.message);
+  inp.onchange = async e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      if (typeof data !== 'object') throw new Error('Format invalide');
+      let counts = [];
+      if (data.lpp      && Array.isArray(data.lpp))      { lppData      = recalcLppTotals(data.lpp);   counts.push(`${data.lpp.length} entrées LPP`); }
+      if (data.salaires && Array.isArray(data.salaires)) { salairesData = data.salaires;                counts.push(`${data.salaires.length} salaires`); }
+      if (data.depenses && Array.isArray(data.depenses)) { depensesData = data.depenses;                counts.push(`${data.depenses.length} dépenses`); }
+      if (data.p3a      && Array.isArray(data.p3a))      { data3A       = recalcP3aTotals(data.p3a);   counts.push(`${data.p3a.length} entrées 3A`); }
+      if (data.invest   && Array.isArray(data.invest))   { investData   = data.invest;                  counts.push(`${data.invest.length} invest`); }
+      if (loadToken()) {
+        const status = document.getElementById('globalStatus');
+        status.textContent = '⏳ Sauvegarde sur Drive…';
+        await driveSaveAll();
       }
-    };
-    r.readAsText(f);
+      refreshAllPages();
+      renderLppTxList();
+      alert('Import réussi ! ' + counts.join(', '));
+    } catch(err) {
+      alert('Erreur import: ' + err.message);
+    }
   };
   inp.click();
 }
+
 
 function lppCalcTotal(epargne, interets, rachat, retrait, date, excludeDate=null) {
   const existing = [...lppData].filter(d => d.date && d.total > 0 && d.date < date && d.date !== excludeDate)
@@ -3259,7 +3242,7 @@ async function driveSaveAll() {
 }
 
 function applyDriveData(d) {
-  if (Array.isArray(d.lpp))      lppData      = d.lpp;
+  if (Array.isArray(d.lpp))      lppData      = recalcLppTotals(d.lpp);
   if (Array.isArray(d.salaires)) salairesData = d.salaires;
   if (Array.isArray(d.depenses)) depensesData = d.depenses;
   if (Array.isArray(d.p3a))      data3A       = recalcP3aTotals(d.p3a);
