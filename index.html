@@ -3093,21 +3093,21 @@ async function driveSignIn() {
 }
 
 function updateDriveBtn(connected, syncing) {
-  const btn   = document.getElementById('driveBtn');
-  const label = document.getElementById('driveBtnLabel');
+  const btn = document.getElementById('driveBtn');
+  if (!btn) return;
   if (syncing) {
-    label.textContent = '⏳';
     btn.style.borderColor = '#fb923c';
-    btn.style.color = '#fb923c';
+    btn.querySelector('svg').setAttribute('stroke','#fb923c');
   } else if (connected) {
-    label.textContent = '✓ Drive';
     btn.style.borderColor = '#34d399';
-    btn.style.color = '#34d399';
+    btn.querySelector('svg').setAttribute('stroke','#34d399');
   } else {
-    label.textContent = 'Drive';
     btn.style.borderColor = 'var(--border)';
-    btn.style.color = 'var(--muted)';
+    btn.querySelector('svg').setAttribute('stroke','var(--muted)');
   }
+  // Compat — si le label existe encore (ancienne version)
+  const label = document.getElementById('driveBtnLabel');
+  if (label) label.textContent = syncing ? '⏳' : connected ? '✓' : 'Drive';
 }
 
 async function driveRequest(method, url, body) {
