@@ -2031,10 +2031,11 @@ function lppCalcTotal(epargne, interets, rachat, retrait, date, excludeDate=null
   return Math.round((base + epargne + interets + rachat - retrait) * 100) / 100;
 }
 
-function recalcLppTotals(data) {
-  // Recalcule tous les totaux en cascade après tri chronologique
+function recalcLppTotals(data, startingCapital = 0) {
+  // Recalcule tous les totaux en cascade après tri chronologique.
+  // startingCapital = solde de départ (total de l'entrée initiale).
   const sorted = [...data].sort((a,b) => a.date.localeCompare(b.date));
-  let running = 0;
+  let running = startingCapital;
   return sorted.map(d => {
     running = Math.round((running + (d.epargne||0) + (d.interets||0) + (d.rachat||0) - (d.retrait||0)) * 100) / 100;
     return { ...d, total: running };
@@ -2095,7 +2096,10 @@ function saveLppEntry() {
   const idx = filtered.findIndex(d => d.date === date);
   const entry = { date, epargne, interets, rachat, retrait, total };
   if (idx >= 0) filtered[idx] = entry; else filtered.push(entry);
-  const recalculated = recalcLppTotals(filtered);
+  // Preserve initial capital entry at [0], recalc the rest from it
+  const initial = filtered[0];
+  const rest    = filtered.slice(1);
+  const recalculated = [initial, ...recalcLppTotals(rest, initial.total)];
   lppData = recalculated;
   lsSave('lpp', recalculated);
   closeModal('lppModal');
@@ -2106,7 +2110,10 @@ function saveLppEntry() {
 
 function deleteLppEntry(date) {
   if (!confirm('Supprimer cette entrée ?')) return;
-  const recalculated = recalcLppTotals(lppData.filter(d => d.date !== date));
+  const filtered = lppData.filter(d => d.date !== date);
+  const initial = filtered[0];
+  const rest    = filtered.slice(1);
+  const recalculated = [initial, ...recalcLppTotals(rest, initial.total)];
   lppData = recalculated;
   lsSave('lpp', recalculated);
   driveSaveAll();
@@ -2187,7 +2194,9 @@ function saveLppEdit() {
   let updated = lppData.filter(d => d.date !== lppEditOrigDate);
   const idx = updated.findIndex(d => d.date === date);
   if (idx >= 0) updated[idx] = entry; else updated.push(entry);
-  const recalculated = recalcLppTotals(updated);
+  const initial = updated[0];
+  const rest    = updated.slice(1);
+  const recalculated = [initial, ...recalcLppTotals(rest, initial.total)];
   lppData = recalculated;
   lsSave('lpp', recalculated);
   driveSaveAll();
@@ -2198,7 +2207,10 @@ function saveLppEdit() {
 
 function confirmDeleteLpp() {
   if (!confirm('Supprimer cette entrée ?')) return;
-  lppData = lppData.filter(d => d.date !== lppEditOrigDate);
+  const filtered = lppData.filter(d => d.date !== lppEditOrigDate);
+  const initial = filtered[0];
+  const rest    = filtered.slice(1);
+  lppData = [initial, ...recalcLppTotals(rest, initial.total)];
   lsSave('lpp', lppData);
   driveSaveAll();
   renderLpp();
@@ -2863,6 +2875,16 @@ function applyDriveData(d) {
   if (Array.isArray(d.depenses)) depensesData = d.depenses;
   if (Array.isArray(d.p3a))      data3A       = d.p3a;
   if (Array.isArray(d.invest))   investData   = d.invest;
+
+  // ── Recalcul en cascade des totaux LPP au chargement ──
+  // Garantit la cohérence même si des totaux stockés sont décalés.
+  // L'entrée [0] (capital initial) est préservée telle quelle car elle
+  // représente le solde de départ (pas un delta), les suivantes sont recalculées.
+  if (lppData.length > 1) {
+    const initial = lppData[0]; // {date, total: capital_initial, epargne:0, ...}
+    const rest    = recalcLppTotals(lppData.slice(1), initial.total);
+    lppData = [initial, ...rest];
+  }
 }
 
 function refreshAllPages() {
