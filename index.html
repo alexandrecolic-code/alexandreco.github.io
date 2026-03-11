@@ -3065,7 +3065,7 @@ function clearToken() {
   localStorage.removeItem('drive_token');
   localStorage.removeItem('drive_token_expiry');
 }
-async function silentRefresh() {
+async async function silentRefresh() {
   if (!GDRIVE_CLIENT_ID) return;
   try {
     await new Promise((resolve, reject) => {
@@ -3327,7 +3327,7 @@ function tryAutoConnect() {
   waitForGSI(() => _doAutoConnect());
 }
 
-async function _doAutoConnect() {
+async async function _doAutoConnect() {
   // 1. Valid token in localStorage → use it directly
   if (loadToken()) {
     hideLoginPage();
