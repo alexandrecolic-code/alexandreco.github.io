@@ -2346,7 +2346,7 @@ function exportAllData() {
   a.click();
 }
 
-function importFullJSON() {
+async function importFullJSON() {
   const inp = document.createElement('input');
   inp.type = 'file'; inp.accept = '.json';
   inp.onchange = e => {
@@ -3090,7 +3090,7 @@ async async function silentRefresh() {
   }
 }
 
-function driveSignIn() {
+async function driveSignIn() {
   if (!GDRIVE_CLIENT_ID) {
     alert('Client ID Google non configuré.\nSuis les instructions dans le README pour configurer OAuth.');
     return;
@@ -3290,7 +3290,7 @@ function waitForGSI(cb, tries=0) {
   setTimeout(() => waitForGSI(cb, tries+1), 200);
 }
 
-function loginWithGoogle() {
+async function loginWithGoogle() {
   if (!GDRIVE_CLIENT_ID) {
     alert('Client ID Google non configuré.');
     return;
