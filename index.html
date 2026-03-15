@@ -1,0 +1,2688 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Finances VF</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://accounts.google.com/gsi/client"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html, body { height:100%; }
+
+:root {
+  --bg:      #0c0c0f;
+  --bg2:     #121215;
+  --bg3:     #1a1a1f;
+  --card:    #14141a;
+  --border:  #252530;
+  --text:    #e2e2ec;
+  --muted:   #5a5a72;
+  --muted2:  #3a3a50;
+  --grid:    #1a1a1f;
+}
+body.light {
+  --bg:      #f4f4f8;
+  --bg2:     #ffffff;
+  --bg3:     #eaeaf0;
+  --card:    #ffffff;
+  --border:  #e0e0ea;
+  --text:    #1a1a2e;
+  --muted:   #8888a8;
+  --muted2:  #c0c0d8;
+  --grid:    #f0f0f6;
+}
+
+body { font-family:'Roboto',sans-serif; background:var(--bg); color:var(--text); display:flex; flex-direction:column; min-height:100vh; transition:background .3s, color .3s; }
+
+/* ── HEADER ── */
+.header { background:var(--bg); border-bottom:none; padding:14px 16px; text-align:center; flex-shrink:0; }
+.header-title { font-size:13px; font-weight:500; letter-spacing:0.5px; }
+.header-status { font-size:10px; margin-top:3px; color:var(--muted); }
+
+/* ── TABS ── */
+.tabs { display:flex; background:var(--bg2); border-bottom:1px solid var(--border); flex-shrink:0; }
+.tab { flex:1; padding:12px 8px; text-align:center; font-size:12px; font-weight:500; color:var(--muted); cursor:pointer; border-bottom:2px solid transparent; transition:all .2s; }
+.tab.active { color:var(--text); border-bottom-color:#4d9fff; }
+.tab-icon { font-size:16px; display:block; margin-bottom:2px; }
+
+/* ── PAGES ── */
+.page { display:none; flex:1; overflow-y:auto; padding-bottom:20px; min-width:0; }
+.page.active { display:block; }
+.content { padding:16px; max-width:600px; margin:0 auto; }
+
+/* ── BOTTOM NAV ── */
+.bottom-nav { display:flex; background:var(--bg2); border-top:1px solid var(--border); flex-shrink:0; position:sticky; bottom:0; }
+.nav-btn { flex:1; padding:12px 4px 10px; text-align:center; font-size:11px; color:var(--muted); cursor:pointer; border:none; background:none; font-family:'Roboto',sans-serif; transition:color .2s; }
+.nav-btn.active { color:#4d9fff; }
+.nav-btn .nav-icon { font-size:20px; display:block; margin-bottom:2px; }
+
+/* ── HERO ── */
+.hero { border:1px solid var(--border); border-radius:20px; padding:20px; margin-bottom:12px; position:relative; overflow:hidden; }
+.hero-lpp { background:var(--card); }
+.hero-cash { background:var(--card); }
+.hero::after { content:''; position:absolute; top:-40px; right:-40px; width:160px; height:160px; border-radius:50%; pointer-events:none; }
+.hero-lpp::after { background:radial-gradient(circle,rgba(77,159,255,.06) 0%,transparent 70%); }
+.hero-cash::after { background:radial-gradient(circle,rgba(52,211,153,.06) 0%,transparent 70%); }
+.hero-label { font-size:10px; text-transform:uppercase; letter-spacing:1.5px; color:var(--muted); margin-bottom:6px; }
+.hero-label .accent-lpp { color:#4d9fff; }
+.hero-label .accent-cash { color:#34d399; }
+.hero-value { font-size:36px; font-weight:700; color:var(--text); letter-spacing:-1px; line-height:1; }
+.hero-value small { font-size:18px; color:var(--muted); font-weight:300; }
+.hero-meta { display:flex; margin-top:14px; padding-top:14px; border-top:1px solid var(--border); }
+.meta-item { flex:1; }
+.meta-label { font-size:9px; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin-bottom:3px; }
+.meta-value { font-size:11px; font-weight:500; }
+
+/* ── PERIODS ── */
+.periods { display:flex; gap:6px; margin-bottom:12px; }
+.period-btn { flex:1; padding:8px 4px; background:var(--bg3); border:1px solid var(--border); border-radius:10px; color:var(--muted); font-family:'Roboto',sans-serif; font-size:11px; cursor:pointer; transition:all .2s; }
+.period-btn.active { background:#1d6fe8; border-color:#4d9fff; color:white; }
+
+/* ── CARDS ── */
+.card { background:var(--card); border:1px solid var(--border); border-radius:20px; padding:16px; margin-bottom:12px; }
+.card:last-child { margin-bottom:0; }
+.card-title { font-size:10px; text-transform:uppercase; letter-spacing:1.5px; color:var(--muted); margin-bottom:14px; }
+
+/* ── SPLIT BARS ── */
+.split-row { margin-bottom:14px; }
+.split-row:last-child { margin-bottom:0; }
+.split-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; }
+.split-left { display:flex; align-items:center; gap:6px; font-size:11px; }
+.split-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
+.split-right { font-size:12px; }
+.split-pct { font-size:10px; color:var(--muted); margin-left:6px; }
+.split-bar-bg { height:5px; background:var(--bg3); border-radius:3px; overflow:hidden; }
+.split-bar-fill { height:100%; border-radius:3px; transition:width 1s ease; }
+
+/* ── SAVING BADGE ── */
+.saving-badge { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:20px; font-size:11px; font-weight:500; margin-top:6px; }
+.saving-good { background:rgba(52,211,153,0.12); color:#34d399; }
+.saving-bad  { background:rgba(248,113,113,0.12); color:#f87171; }
+.tx-shortcut { flex:1; padding:6px 4px; background:var(--bg3); border:1px solid var(--border); border-radius:8px; color:var(--muted); font-family:'Roboto',sans-serif; font-size:10px; cursor:pointer; transition:all .2s; }
+.tx-shortcut:hover { color:var(--text); border-color:#4d9fff; }
+.tx-row { display:flex; align-items:center; justify-content:space-between; padding:11px 0; border-bottom:1px solid var(--border); }
+.tx-row:last-child { border-bottom:none; }
+.tx-date { font-size:10px; color:var(--muted); margin-bottom:2px; }
+.tx-label { font-size:12px; }
+.tx-amount { font-size:13px; font-weight:500; }
+
+/* ── Login Page ── */
+#loginPage {
+  display:none; position:fixed; inset:0; z-index:2000;
+  background:var(--bg);
+  flex-direction:column; align-items:center; justify-content:center;
+  padding:32px 24px;
+}
+#loginPage.visible { display:flex; }
+.login-logo {
+  width:72px; height:72px; border-radius:24px;
+  background:linear-gradient(135deg,#1a1a2e 0%,#252540 100%);
+  border:1px solid var(--border);
+  display:flex; align-items:center; justify-content:center;
+  margin-bottom:28px;
+  box-shadow: 0 8px 32px rgba(77,159,255,.15);
+}
+.login-title { font-size:26px; font-weight:300; letter-spacing:-.5px; margin-bottom:8px; text-align:center; }
+.login-subtitle { font-size:13px; color:var(--muted); text-align:center; margin-bottom:48px; line-height:1.5; }
+.login-features { width:100%; max-width:320px; margin-bottom:40px; display:flex; flex-direction:column; gap:12px; }
+.login-feature { display:flex; align-items:center; gap:12px; padding:12px 16px; background:var(--bg3); border-radius:14px; border:1px solid var(--border); }
+.login-feature-icon { width:32px; height:32px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.login-feature-text { font-size:12px; color:var(--muted); line-height:1.4; }
+.login-feature-title { font-size:13px; font-weight:500; color:var(--text); margin-bottom:2px; }
+.login-google-btn {
+  width:100%; max-width:320px;
+  padding:16px 24px;
+  background:#4d9fff;
+  border:none; border-radius:16px;
+  color:white; font-family:Roboto,sans-serif; font-size:15px; font-weight:500;
+  cursor:pointer; display:flex; align-items:center; justify-content:center; gap:10px;
+  transition:all .2s; box-shadow:0 4px 20px rgba(77,159,255,.3);
+}
+.login-google-btn:hover { background:#3d8ff0; transform:translateY(-1px); }
+.login-google-btn:active { transform:translateY(0); opacity:.9; }
+.login-demo-btn {
+  margin-top:14px; background:none; border:none;
+  color:var(--muted); font-family:Roboto,sans-serif; font-size:12px;
+  cursor:pointer; padding:8px; text-decoration:underline;
+}
+.login-footer { margin-top:32px; font-size:10px; color:var(--muted2); text-align:center; line-height:1.6; }
+
+/* ── Modal ── */
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:1000; align-items:flex-end; justify-content:center; }
+.modal-overlay.open { display:flex; }
+.modal { background:var(--bg2); border-radius:24px 24px 0 0; padding:24px; width:100%; max-width:500px; max-height:85vh; overflow-y:auto; }
+.modal-title { font-size:15px; font-weight:500; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center; }
+.modal-close { background:var(--bg3); border:none; border-radius:50%; width:28px; height:28px; cursor:pointer; color:var(--muted); font-size:16px; display:flex; align-items:center; justify-content:center; }
+.form-group { margin-bottom:14px; }
+.form-label { font-size:11px; color:var(--muted); margin-bottom:5px; display:block; }
+.form-input { width:100%; padding:11px 14px; background:var(--bg3); border:1px solid var(--border); border-radius:12px; color:var(--text); font-family:Roboto,sans-serif; font-size:14px; box-sizing:border-box; outline:none; }
+.form-input:focus { border-color:#4d9fff; }
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.btn-primary { width:100%; padding:14px; background:#4d9fff; border:none; border-radius:14px; color:white; font-family:Roboto,sans-serif; font-size:14px; font-weight:500; cursor:pointer; margin-top:8px; }
+.btn-primary:active { opacity:.85; }
+.btn-danger { background:#f87171; color:white; border:none; border-radius:8px; padding:4px 10px; font-size:11px; cursor:pointer; font-family:Roboto,sans-serif; }
+.add-btn { display:flex; align-items:center; gap:6px; padding:8px 14px; background:var(--bg3); border:1px solid var(--border); border-radius:12px; color:var(--muted); font-family:Roboto,sans-serif; font-size:12px; cursor:pointer; transition:all .2s; }
+.add-btn:hover { border-color:#4d9fff; color:#4d9fff; }
+.data-row { display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border); font-size:12px; }
+.data-row:last-child { border-bottom:none; }
+
+/* ── Desktop layout ── */
+@media (min-width: 768px) {
+  body { flex-direction:row; }
+
+  /* Sidebar nav on the left */
+  .bottom-nav {
+    flex-direction:column;
+    width:88px;
+    min-height:100vh;
+    border-top:none;
+    border-right:1px solid var(--border);
+    position:sticky;
+    top:0;
+    height:100vh;
+    padding:16px 0;
+    justify-content:flex-start;
+    gap:4px;
+  }
+  .nav-btn { padding:14px 4px; font-size:10px; }
+
+  /* Main content area */
+  .page { padding-bottom:40px; }
+  .content {
+    max-width:900px;
+    padding:24px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    grid-template-rows:auto;
+    column-gap:16px;
+    align-items:start;
+  }
+
+  /* Hero and periods span full width */
+  .content > .hero,
+  .content > .periods,
+  #cashPeriods, #lppPeriods, #p3aPeriods, #totalPeriods,
+  .content > div[style*="padding:0 16px"] { grid-column:1 / -1; }
+
+  /* Header spans full width */
+  .header { text-align:left; padding:16px 24px; }
+
+  /* Bigger chart heights on desktop */
+  .card { margin-bottom:16px; }
+
+  /* Hero bigger */
+  .hero { padding:28px; }
+  .hero-value { font-size:48px; }
+  .hero-label { font-size:12px; }
+  .meta-label { font-size:10px; }
+  .meta-value { font-size:13px; }
+}
+
+@media (min-width: 1100px) {
+  .content { max-width:1100px; }
+}
+
+/* ═══════════ LPP REDESIGN v4 ═══════════ */
+@keyframes lppNumIn {
+  from { opacity:0; transform:translateY(7px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+@keyframes lppBarIn {
+  from { width:0 !important; opacity:0; }
+}
+@keyframes lppFadeIn {
+  from { opacity:0; transform:translateY(4px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+#page-lpp { background:var(--bg); }
+
+.lpp-hero-zone {
+  padding:24px 18px 0; position:relative; overflow:hidden;
+}
+.lpp-hero-zone::before {
+  content:''; position:absolute; top:-60px; right:-40px;
+  width:220px; height:220px;
+  background:radial-gradient(circle,rgba(77,159,255,.07) 0%,transparent 70%);
+  pointer-events:none;
+}
+.lpp-eyebrow {
+  font-size:9px; text-transform:uppercase; letter-spacing:1.8px;
+  color:var(--muted); margin-bottom:8px; font-family:Roboto,sans-serif;
+}
+.lpp-big-num {
+  font-family:'Bebas Neue',sans-serif; font-size:68px;
+  line-height:.88; letter-spacing:-.01em; color:var(--text); margin-bottom:14px;
+}
+.lpp-big-num .lpp-chf {
+  font-family:'DM Mono',monospace; font-size:22px; font-weight:300;
+  color:var(--muted); vertical-align:top; margin-top:10px; margin-right:3px;
+}
+.lpp-num-animate { animation: lppNumIn .35s cubic-bezier(.2,0,.4,1) both; }
+
+.lpp-ytd-row { display:flex; align-items:center; gap:8px; }
+.lpp-ytd-pill {
+  display:inline-flex; align-items:center; gap:5px;
+  padding:5px 11px; border-radius:7px;
+  font-size:12px; font-weight:600; font-family:'DM Mono',monospace;
+}
+.lpp-ytd-pill.up   { background:rgba(77,159,255,.13); color:#4d9fff; }
+.lpp-ytd-pill.down { background:rgba(248,113,113,.1);  color:#f87171; }
+.lpp-ytd-sub { font-size:10px; color:var(--muted); font-family:Roboto,sans-serif; }
+
+/* Line chart */
+.lpp-line-wrap { margin:18px 18px 0; height:110px; position:relative; }
+.lpp-axis-row  { position:relative; height:18px; margin:2px 18px 0; }
+.lpp-axis-row span {
+  position:absolute; font-size:9px; color:var(--muted);
+  font-family:'DM Mono',monospace; transform:translateX(-50%); white-space:nowrap;
+}
+
+/* Period pills */
+.lpp-pill-row {
+  display:flex; gap:6px; padding:14px 18px 0; width:100%; box-sizing:border-box;
+  overflow-x:auto; scrollbar-width:none;
+}
+.lpp-pill-row::-webkit-scrollbar { display:none; }
+.lpp-pill {
+  flex-shrink:0; padding:6px 15px; border-radius:20px;
+  font-size:11px; font-weight:500; cursor:pointer;
+  background:var(--bg3); border:1px solid var(--border); color:var(--muted);
+  font-family:Roboto,sans-serif; transition:all .18s; outline:none;
+  -webkit-tap-highlight-color:transparent;
+}
+.lpp-pill.active { background:#1d6fe8; border-color:#4d9fff; color:#fff; font-weight:600; }
+
+/* KPI grid 2×2 avec barres de poids */
+/* KPI strip — une seule ligne 4 colonnes */
+.lpp-kpi-grid {
+  display:grid; grid-template-columns:repeat(4,1fr);
+  margin:12px 18px 0;
+  border:1px solid var(--border); border-radius:14px; overflow:hidden;
+}
+.lpp-kpi-item {
+  background:var(--bg2);
+  padding:11px 10px 13px;
+  position:relative; overflow:hidden;
+  border-right:1px solid var(--border);
+}
+.lpp-kpi-item:last-child { border-right:none; }
+.lpp-kpi-lbl {
+  font-size:8px; text-transform:uppercase; letter-spacing:1px;
+  color:var(--muted); margin-bottom:5px; font-family:Roboto,sans-serif;
+}
+.lpp-kpi-val {
+  font-family:'DM Mono',monospace; font-size:12px;
+  font-weight:500; letter-spacing:-.02em;
+}
+.lpp-kpi-pct {
+  font-size:9px; color:var(--muted); font-family:'DM Mono',monospace;
+  margin-top:2px;
+}
+/* liseré coloré uniquement en bas */
+.lpp-kpi-foot {
+  position:absolute; left:0; right:0; bottom:0; height:2px;
+  background:var(--border);
+}
+.lpp-kpi-foot-fill {
+  height:100%;
+  transition:width .8s cubic-bezier(.4,0,.2,1);
+  animation:lppBarIn .8s cubic-bezier(.4,0,.2,1) both;
+}
+
+/* Chart cards style line chart */
+.lpp-card {
+  background:var(--card); border:1px solid var(--border);
+  border-radius:18px; padding:16px; margin:12px 18px 0;
+  animation: lppFadeIn .4s ease both;
+}
+.lpp-card-title {
+  font-size:9px; text-transform:uppercase; letter-spacing:1.5px;
+  color:var(--muted); margin-bottom:14px; font-weight:600; font-family:Roboto,sans-serif;
+}
+
+/* 3A pill active — violet */
+.p3a-pill.active { background:#d97706; border-color:#fb923c; color:#fff; }
+
+
+/* 3A — segmented control */
+.p3a-seg { display:flex; gap:4px; background:var(--bg3); padding:3px; border-radius:10px; }
+.p3a-seg-btn { flex:1; padding:7px 4px; border:none; border-radius:7px; background:transparent; color:var(--muted); font-family:Roboto,sans-serif; font-size:11px; font-weight:500; cursor:pointer; transition:all .18s; }
+.p3a-seg-btn.active { background:var(--bg2); color:var(--text); box-shadow:0 1px 4px rgba(0,0,0,.25); }
+
+/* 3A — pilier badge in tx list */
+.p3a-badge { display:inline-block; padding:2px 7px; border-radius:6px; font-size:9px; font-weight:600; letter-spacing:.4px; text-transform:uppercase; }
+.p3a-badge-sq  { background:rgba(251,146,60,.12); color:#fb923c; }
+.p3a-badge-mob { background:rgba(96,165,250,.12);  color:#60a5fa; }
+
+/* 3A — pilier switch tabs */
+.p3a-switch { display:flex; gap:6px; padding:0 18px; margin-bottom:4px; width:100%; box-sizing:border-box; }
+.p3a-switch-btn { flex:1; padding:9px 4px; border:1px solid var(--border); border-radius:10px; background:transparent; color:var(--muted); font-family:Roboto,sans-serif; font-size:11px; font-weight:500; cursor:pointer; transition:all .18s; text-align:center; }
+.p3a-switch-btn.active { border-color:#fb923c; color:#fb923c; background:rgba(251,146,60,.07); }
+
+</style>
+</head>
+<body>
+
+<!-- Login Page -->
+<div id="loginPage" class="visible">
+  <div class="login-logo">
+    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#4d9fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/>
+      <polyline points="16 7 22 7 22 13"/>
+    </svg>
+  </div>
+  <div class="login-title">Finances VF</div>
+  <div class="login-subtitle">Ton tableau de bord financier<br>personnel et sécurisé</div>
+
+  <div class="login-features">
+    <div class="login-feature">
+      <div class="login-feature-icon" style="background:rgba(77,159,255,.1)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4d9fff" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
+      <div>
+        <div class="login-feature-title">Données privées</div>
+        <div class="login-feature-text">Stockées dans ton Google Drive personnel, accessible uniquement par toi</div>
+      </div>
+    </div>
+    <div class="login-feature">
+      <div class="login-feature-icon" style="background:rgba(52,211,153,.1)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+      </div>
+      <div>
+        <div class="login-feature-title">Sync automatique</div>
+        <div class="login-feature-text">LPP, Cash, 3A, Investissements — tout synchronisé en temps réel</div>
+      </div>
+    </div>
+    <div class="login-feature">
+      <div class="login-feature-icon" style="background:rgba(251,146,60,.1)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fb923c" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+      </div>
+      <div>
+        <div class="login-feature-title">Mobile & Desktop</div>
+        <div class="login-feature-text">Accès depuis n'importe quel appareil, partout</div>
+      </div>
+    </div>
+  </div>
+
+  <button class="login-google-btn" onclick="loginWithGoogle()">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+    </svg>
+    Continuer avec Google
+  </button>
+  <button class="login-demo-btn" onclick="enterDemoMode()">Voir la démo sans connexion</button>
+
+  <div class="login-footer">
+    Tes données ne sont jamais envoyées à un serveur tiers.<br>
+    Connexion sécurisée via OAuth 2.0 Google.
+  </div>
+</div>
+
+<!-- Header -->
+<div class="header" style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;gap:12px;">
+  <!-- Avatar + titre -->
+  <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0">
+    <div id="headerAvatar" style="width:36px;height:36px;border-radius:50%;background:var(--bg3);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:border-color .2s,background .2s;"><svg id="headerAvatarIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="3"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg></div>
+    <div style="min-width:0">
+      <div style="font-size:14px;font-weight:600;color:var(--text);font-family:Roboto,sans-serif;line-height:1.2" id="headerTitle">Patrimoine</div>
+      <div style="font-size:11px;color:var(--muted);font-family:Roboto,sans-serif" id="globalStatus">mer. 11 mars</div>
+    </div>
+  </div>
+  <!-- Actions droite -->
+  <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+    <button onclick="driveSignIn()" id="driveBtn" title="Google Drive" style="width:34px;height:34px;background:var(--bg3);border:1px solid var(--border);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+    </button>
+    <button onclick="importUBSPrices()" title="Import CSV fond" style="width:34px;height:34px;background:var(--bg3);border:1px solid var(--border);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></button>
+    <button onclick="importFullJSON()" id="importBtn" title="Importer JSON" style="width:34px;height:34px;background:var(--bg3);border:1px solid var(--border);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    </button>
+    <button onclick="logOut()" title="Déconnexion" style="width:34px;height:34px;background:var(--bg3);border:1px solid var(--border);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- Page LPP -->
+<div class="page active" id="page-lpp">
+
+  <div class="lpp-hero-zone">
+    <div class="lpp-eyebrow">LPP · Solde actuel</div>
+    <div class="lpp-big-num" id="lppHeroNum">
+      <span class="lpp-chf">CHF</span><span id="lppVal">—</span>
+    </div>
+    <div class="lpp-ytd-row">
+      <span id="lppYtdPill" class="lpp-ytd-pill up">▲ +CHF —</span>
+      <span class="lpp-ytd-sub" id="lppYtdSub">depuis janv. 2026</span>
+    </div>
+  </div>
+
+  <div class="lpp-line-wrap">
+    <canvas id="lppLineChart"></canvas>
+  </div>
+  <div class="lpp-axis-row" id="lppAxisRow"></div>
+
+  <div class="lpp-pill-row">
+    <button class="lpp-pill" onclick="setLppPeriod('ytd',this)">YTD</button>
+    <button class="lpp-pill active" onclick="setLppPeriod('6m',this)">6 mois</button>
+    <button class="lpp-pill" onclick="setLppPeriod('1y',this)">1 an</button>
+    <button class="lpp-pill" onclick="setLppPeriod('all',this)">Tout</button>
+  </div>
+
+  <!-- KPI grid rendu dynamiquement -->
+  <div class="lpp-kpi-grid" id="lppKpiGrid"></div>
+
+  <div class="lpp-card">
+    <div class="lpp-card-title">Évolution du capital</div>
+    <div style="position:relative;height:160px"><canvas id="lppAreaChart"></canvas></div>
+  </div>
+
+  <div class="lpp-card">
+    <div class="lpp-card-title">Versements mensuels</div>
+    <div style="position:relative;height:140px"><canvas id="lppBarChart"></canvas></div>
+  </div>
+
+  <div style="padding:14px 18px 40px">
+    <button onclick="showPage('lppTransactions')" style="width:100%;padding:13px;background:var(--bg2);border:1px solid var(--border);border-radius:14px;color:var(--muted);font-family:Roboto,sans-serif;font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      Transactions LPP
+    </button>
+  </div>
+</div>
+
+<!-- Page LPP Transactions -->
+
+<!-- ══════════════════ Page 3A ══════════════════ -->
+<div class="page" id="page-3a">
+  <!-- Hero zone — orange -->
+  <div class="lpp-hero-zone">
+    <div class="lpp-eyebrow">3ème Pilier · Solde actuel</div>
+    <div class="lpp-big-num" id="p3aHeroNum">
+      <span class="lpp-chf">CHF</span><span id="p3aVal">—</span>
+    </div>
+    <div class="lpp-ytd-row">
+      <span id="p3aYtdPill" class="lpp-ytd-pill up">▲ +CHF —</span>
+      <span class="lpp-ytd-sub" id="p3aYtdSub">depuis janv. 2026</span>
+    </div>
+  </div>
+  <div class="lpp-line-wrap"><canvas id="p3aLineChart"></canvas></div>
+  <div class="lpp-axis-row" id="p3aAxisRow"></div>
+  <!-- Filtres temporels -->
+  <div class="lpp-pill-row">
+    <button class="lpp-pill p3a-pill" onclick="setP3aPeriod('ytd',this)">YTD</button>
+    <button class="lpp-pill p3a-pill active" onclick="setP3aPeriod('6m',this)">6 mois</button>
+    <button class="lpp-pill p3a-pill" onclick="setP3aPeriod('1y',this)">1 an</button>
+    <button class="lpp-pill p3a-pill" onclick="setP3aPeriod('all',this)">Tout</button>
+  </div>
+  <!-- Switch pilier -->
+  <div class="p3a-switch" id="p3aPilierSwitch">
+    <button class="p3a-switch-btn active" data-pilier="all"        onclick="p3aSetPilier('all',this)">Consolidé</button>
+    <button class="p3a-switch-btn"        data-pilier="swissquote" onclick="p3aSetPilier('swissquote',this)">Swissquote</button>
+    <button class="p3a-switch-btn"        data-pilier="mobiliere"  onclick="p3aSetPilier('mobiliere',this)">La Mobilière</button>
+  </div>
+  <!-- KPI grid -->
+  <div class="lpp-kpi-grid" id="p3aKpiGrid"></div>
+  <!-- Plafond annuel (consolidé uniquement) -->
+  <div class="lpp-card" id="p3aCardPlafond">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div class="lpp-card-title" style="margin-bottom:0" id="p3aPlafondTitle">Plafond 2026</div>
+      <div style="font-size:11px;color:var(--muted)" id="p3aPlafondReste">Reste CHF —</div>
+    </div>
+    <div style="height:5px;background:var(--bg3);border-radius:99px;overflow:hidden;margin-bottom:8px">
+      <div id="p3aPlafondBar" style="height:100%;width:0%;background:#fb923c;border-radius:99px;transition:width .6s ease"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between">
+      <span style="font-size:10px;color:var(--muted)" id="p3aPlafondVerse">Versé : CHF —</span>
+      <span style="font-size:10px;color:var(--muted)" id="p3aPlafondMax">Plafond : CHF —</span>
+    </div>
+  </div>
+  <!-- Évolution du capital -->
+  <div class="lpp-card">
+    <div class="lpp-card-title">Évolution du capital</div>
+    <div style="position:relative;height:160px"><canvas id="p3aAreaChart"></canvas></div>
+  </div>
+  <!-- Versements mensuels (Mob / consolidé) ou Perf (SQ) -->
+  <div class="lpp-card" id="p3aCardBar">
+    <div class="lpp-card-title">Versements mensuels</div>
+    <div style="position:relative;height:140px"><canvas id="p3aBarChart"></canvas></div>
+  </div>
+  <div class="lpp-card" id="p3aCardPerf" style="display:none">
+    <div class="lpp-card-title">Performance UBS Vitainvest 100 (CHF)</div>
+    <div style="position:relative;height:140px"><canvas id="p3aPerfChart"></canvas></div>
+  </div>
+  <!-- Bouton transactions -->
+  <div style="padding:14px 18px 40px">
+    <button onclick="showPage('p3aTransactions')" style="width:100%;padding:13px;background:var(--bg2);border:1px solid var(--border);border-radius:14px;color:var(--muted);font-family:Roboto,sans-serif;font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      Transactions 3A
+    </button>
+  </div>
+</div>
+
+<!-- ══════════════════ Page 3A Transactions ══════════════════ -->
+<div class="page" id="page-p3aTransactions">
+  <div style="background:var(--bg2);border-bottom:1px solid var(--border);padding:14px 16px;display:flex;align-items:center;justify-content:space-between">
+    <div style="display:flex;align-items:center;gap:12px">
+      <button onclick="showPage('3a')" style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:7px 12px;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:Roboto,sans-serif;font-size:11px;color:var(--muted)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>Retour
+      </button>
+      <div style="font-size:13px;font-weight:500">Transactions 3A</div>
+    </div>
+  </div>
+  <div class="content">
+    <div id="p3aTxList"></div>
+  </div>
+
+</div>
+
+<!-- ══════════════════ Page 3A Edit ══════════════════ -->
+<div class="page" id="page-p3aEdit">
+  <div style="background:var(--bg2);border-bottom:1px solid var(--border);padding:14px 16px;display:flex;align-items:center;gap:12px">
+    <button onclick="showPage('p3aTransactions')" style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:7px 12px;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:Roboto,sans-serif;font-size:11px;color:var(--muted)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>Retour
+    </button>
+    <div style="font-size:13px;font-weight:500" id="p3aEditTitle">Modifier entrée</div>
+  </div>
+  <div class="content" style="padding-top:20px">
+    <div class="card">
+      <div class="form-group">
+        <label class="form-label">Pilier</label>
+        <div class="p3a-seg" id="p3aEditPilierSeg">
+          <button class="p3a-seg-btn active" data-val="swissquote" onclick="p3aSegSelect('p3aEditPilierSeg',this);p3aEditUpdateForm()">Swissquote</button>
+          <button class="p3a-seg-btn" data-val="mobiliere" onclick="p3aSegSelect('p3aEditPilierSeg',this);p3aEditUpdateForm()">La Mobilière</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Type</label>
+        <div class="p3a-seg" id="p3aEditTypeSeg">
+          <button class="p3a-seg-btn active" data-val="versement"     onclick="p3aSegSelect('p3aEditTypeSeg',this);p3aEditUpdateForm()">Versement</button>
+          <button class="p3a-seg-btn"        data-val="investissement" onclick="p3aSegSelect('p3aEditTypeSeg',this);p3aEditUpdateForm()">Investissement</button>
+          <button class="p3a-seg-btn"        data-val="retrait"       onclick="p3aSegSelect('p3aEditTypeSeg',this);p3aEditUpdateForm()">Retrait</button>
+        </div>
+      </div>
+      <div class="form-group"><label class="form-label">Date</label><input type="date" class="form-input" id="p3aEditDate"></div>
+      <!-- Versement SQ -->
+      <div id="p3aEditFields_sq_versement" style="display:none">
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Versement (CHF)</label><input type="number" step="0.01" class="form-input" id="p3aEdit_sq_versement" placeholder="0"></div>
+          <div class="form-group"><label class="form-label">Dividendes (CHF)</label><input type="number" step="0.01" class="form-input" id="p3aEdit_sq_dividendes" placeholder="0"></div>
+        </div>
+      </div>
+      <!-- Investissement SQ -->
+      <div id="p3aEditFields_sq_investissement" style="display:none">
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Nbre de parts</label><input type="number" step="0.0001" class="form-input" id="p3aEdit_sq_nbParts" placeholder="0.0000"></div>
+          <div class="form-group"><label class="form-label">Prix du fond (CHF)</label><input type="number" step="0.01" class="form-input" id="p3aEdit_sq_prixUnit" placeholder="0.00"></div>
+        </div>
+      </div>
+      <!-- Retrait SQ -->
+      <div id="p3aEditFields_sq_retrait" style="display:none">
+        <div class="form-group"><label class="form-label">Retrait (CHF)</label><input type="number" step="0.01" class="form-input" id="p3aEdit_sq_retrait" placeholder="0"></div>
+      </div>
+      <!-- Versement MOB -->
+      <div id="p3aEditFields_mob_versement" style="display:none">
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Versement (CHF)</label><input type="number" step="0.01" class="form-input" id="p3aEdit_mob_versement" placeholder="0"></div>
+          <div class="form-group"><label class="form-label">Frais (CHF)</label><input type="number" step="0.01" class="form-input" id="p3aEdit_mob_frais" placeholder="0"></div>
+        </div>
+        <div class="form-group"><label class="form-label">Intérêts (CHF)</label><input type="number" step="0.01" class="form-input" id="p3aEdit_mob_interets" placeholder="0"></div>
+      </div>
+      <!-- Investissement MOB -->
+      <div id="p3aEditFields_mob_investissement" style="display:none">
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Nbre de parts</label><input type="number" step="0.0001" class="form-input" id="p3aEdit_mob_nbParts" placeholder="0.0000"></div>
+          <div class="form-group"><label class="form-label">Prix du fond (CHF)</label><input type="number" step="0.01" class="form-input" id="p3aEdit_mob_prixUnit" placeholder="0.00"></div>
+        </div>
+      </div>
+      <!-- Retrait MOB -->
+      <div id="p3aEditFields_mob_retrait" style="display:none">
+        <div class="form-group"><label class="form-label">Retrait (CHF)</label><input type="number" step="0.01" class="form-input" id="p3aEdit_mob_retrait" placeholder="0"></div>
+      </div>
+      <button onclick="saveP3aEdit()" style="width:100%;padding:14px;background:#fb923c;border:none;border-radius:14px;color:white;font-size:14px;font-weight:600;cursor:pointer;font-family:Roboto,sans-serif;margin-bottom:12px;margin-top:8px">Enregistrer</button>
+      <button onclick="confirmDeleteP3a()" style="width:100%;padding:14px;background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.3);border-radius:14px;color:#f87171;font-size:14px;font-weight:500;cursor:pointer;font-family:Roboto,sans-serif">Supprimer</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ Modal nouvelle entrée 3A ══════════════════ -->
+<div class="modal-overlay" id="p3aModal">
+  <div class="modal-sheet">
+    <div class="modal-header">
+      <div class="modal-title">Nouvelle entrée 3A</div>
+      <button class="modal-close" onclick="closeModal('p3aModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Pilier</label>
+        <div class="p3a-seg" id="p3aFormPilierSeg">
+          <button class="p3a-seg-btn active" data-val="swissquote" onclick="p3aSegSelect('p3aFormPilierSeg',this);p3aUpdateForm()">Swissquote</button>
+          <button class="p3a-seg-btn" data-val="mobiliere" onclick="p3aSegSelect('p3aFormPilierSeg',this);p3aUpdateForm()">La Mobilière</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Type</label>
+        <div class="p3a-seg" id="p3aFormTypeSeg">
+          <button class="p3a-seg-btn active" data-val="versement"     onclick="p3aSegSelect('p3aFormTypeSeg',this);p3aUpdateForm()">Versement</button>
+          <button class="p3a-seg-btn"        data-val="investissement" onclick="p3aSegSelect('p3aFormTypeSeg',this);p3aUpdateForm()">Investissement</button>
+          <button class="p3a-seg-btn"        data-val="retrait"       onclick="p3aSegSelect('p3aFormTypeSeg',this);p3aUpdateForm()">Retrait</button>
+        </div>
+      </div>
+      <div class="form-group"><label class="form-label">Date</label><input type="date" class="form-input" id="p3aFormDate"></div>
+      <!-- Versement SQ -->
+      <div id="p3aFormFields_sq_versement">
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Versement (CHF)</label><input type="number" step="0.01" class="form-input" id="p3aForm_sq_versement" placeholder="0" oninput="p3aUpdatePreview()"></div>
+          <div class="form-group"><label class="form-label">Dividendes (CHF)</label><input type="number" step="0.01" class="form-input" id="p3aForm_sq_dividendes" placeholder="0" oninput="p3aUpdatePreview()"></div>
+        </div>
+      </div>
+      <!-- Investissement SQ -->
+      <div id="p3aFormFields_sq_investissement" style="display:none">
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Nbre de parts</label><input type="number" step="0.0001" class="form-input" id="p3aForm_sq_nbParts" placeholder="0.0000" oninput="p3aUpdatePreview()"></div>
+          <div class="form-group"><label class="form-label">Prix du fond (CHF)</label><input type="number" step="0.01" class="form-input" id="p3aForm_sq_prixUnit" placeholder="0.00" oninput="p3aUpdatePreview()"></div>
+        </div>
+      </div>
+      <!-- Retrait SQ -->
+      <div id="p3aFormFields_sq_retrait" style="display:none">
+        <div class="form-group"><label class="form-label">Retrait (CHF)</label><input type="number" step="0.01" class="form-input" id="p3aForm_sq_retrait" placeholder="0" oninput="p3aUpdatePreview()"></div>
+      </div>
+      <!-- Versement MOB -->
+      <div id="p3aFormFields_mob_versement" style="display:none">
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Versement (CHF)</label><input type="number" step="0.01" class="form-input" id="p3aForm_mob_versement" placeholder="0" oninput="p3aUpdatePreview()"></div>
+          <div class="form-group"><label class="form-label">Frais (CHF)</label><input type="number" step="0.01" class="form-input" id="p3aForm_mob_frais" placeholder="0" oninput="p3aUpdatePreview()"></div>
+        </div>
+        <div class="form-group"><label class="form-label">Intérêts (CHF)</label><input type="number" step="0.01" class="form-input" id="p3aForm_mob_interets" placeholder="0" oninput="p3aUpdatePreview()"></div>
+      </div>
+      <!-- Investissement MOB -->
+      <div id="p3aFormFields_mob_investissement" style="display:none">
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Nbre de parts</label><input type="number" step="0.0001" class="form-input" id="p3aForm_mob_nbParts" placeholder="0.0000" oninput="p3aUpdatePreview()"></div>
+          <div class="form-group"><label class="form-label">Prix du fond (CHF)</label><input type="number" step="0.01" class="form-input" id="p3aForm_mob_prixUnit" placeholder="0.00" oninput="p3aUpdatePreview()"></div>
+        </div>
+      </div>
+      <!-- Retrait MOB -->
+      <div id="p3aFormFields_mob_retrait" style="display:none">
+        <div class="form-group"><label class="form-label">Retrait (CHF)</label><input type="number" step="0.01" class="form-input" id="p3aForm_mob_retrait" placeholder="0" oninput="p3aUpdatePreview()"></div>
+      </div>
+      <!-- Preview -->
+      <div style="background:var(--bg3);border-radius:12px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;margin-top:4px">
+        <span style="font-size:11px;color:var(--muted)" id="p3aPreviewLabel">Montant</span>
+        <span style="font-size:16px;font-weight:600;font-family:'DM Mono',monospace">CHF <span id="p3aFormTotalPreview">—</span></span>
+      </div>
+      <button onclick="saveP3aEntry()" style="width:100%;padding:14px;background:#fb923c;border:none;border-radius:14px;color:white;font-size:14px;font-weight:600;cursor:pointer;font-family:Roboto,sans-serif;margin-top:12px">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<div class="page" id="page-lppTransactions">
+  <div style="background:var(--bg2);border-bottom:1px solid var(--border);padding:14px 16px;display:flex;align-items:center;gap:12px">
+    <button onclick="showPage('lpp')" style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:7px 12px;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:Roboto,sans-serif;font-size:11px;color:var(--muted)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      Retour
+    </button>
+    <div style="font-size:13px;font-weight:500">Transactions LPP</div>
+  </div>
+  <div class="content" style="padding-top:16px">
+    <div class="card">
+      <div id="lppTxList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Page LPP Edit -->
+<div class="page" id="page-lppEdit">
+  <div style="background:var(--bg2);border-bottom:1px solid var(--border);padding:14px 16px;display:flex;align-items:center;gap:12px">
+    <button onclick="showPage('lppTransactions')" style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:7px 12px;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:Roboto,sans-serif;font-size:11px;color:var(--muted)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      Retour
+    </button>
+    <div style="font-size:13px;font-weight:500" id="lppEditTitle">Modifier entrée</div>
+  </div>
+  <div class="content" style="padding-top:20px">
+    <div class="card">
+      <div class="form-group">
+        <label class="form-label">Date</label>
+        <input type="date" class="form-input" id="lppEditDate" oninput="updateLppEditPreview()">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Épargne (CHF)</label>
+          <input type="number" step="0.01" class="form-input" id="lppEditEpargne" oninput="updateLppEditPreview()" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Intérêts (CHF)</label>
+          <input type="number" step="0.01" class="form-input" id="lppEditInterets" oninput="updateLppEditPreview()" placeholder="0">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Rachat (CHF)</label>
+          <input type="number" step="0.01" class="form-input" id="lppEditRachat" oninput="updateLppEditPreview()" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Retrait (CHF)</label>
+          <input type="number" step="0.01" class="form-input" id="lppEditRetrait" oninput="updateLppEditPreview()" placeholder="0">
+        </div>
+      </div>
+      <div style="background:var(--bg3);border-radius:12px;padding:12px 14px;margin:8px 0 16px">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:4px">Total calculé</div>
+        <div style="font-size:20px;font-weight:600;color:#4d9fff">CHF <span id="lppEditTotalPreview">—</span></div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px" id="lppEditBase"></div>
+      </div>
+      <button onclick="saveLppEdit()" style="width:100%;padding:14px;background:#4d9fff;border:none;border-radius:14px;color:white;font-size:14px;font-weight:600;cursor:pointer;font-family:Roboto,sans-serif;margin-bottom:12px">Enregistrer</button>
+      <button onclick="confirmDeleteLpp()" style="width:100%;padding:14px;background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.3);border-radius:14px;color:#f87171;font-size:14px;font-weight:500;cursor:pointer;font-family:Roboto,sans-serif">Supprimer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Page Cash -->
+
+
+
+
+<!-- Page 3A -->
+
+
+<!-- Page 3A Transactions -->
+
+
+<!-- Page 3A Edit -->
+
+
+<!-- Page Total -->
+
+
+
+<!-- Page Transactions -->
+
+
+<!-- Bottom Nav -->
+
+<!-- Page Investissements -->
+
+
+
+<!-- LPP Modal -->
+<div class="modal-overlay" id="lppModal" onclick="if(event.target===this)closeModal('lppModal')">
+  <div class="modal">
+    <div class="modal-title">
+      <span id="lppModalTitle">Nouvelle entrée LPP</span>
+      <button class="modal-close" onclick="closeModal('lppModal')">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Date</label>
+      <input type="date" class="form-input" id="lppFormDate" oninput="updateLppTotalPreview()">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Épargne (CHF)</label>
+        <input type="number" step="0.01" class="form-input" id="lppFormEpargne" oninput="updateLppTotalPreview()" placeholder="0">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Intérêts (CHF)</label>
+        <input type="number" step="0.01" class="form-input" id="lppFormInterets" oninput="updateLppTotalPreview()" placeholder="0">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Rachat (CHF)</label>
+        <input type="number" step="0.01" class="form-input" id="lppFormRachat" oninput="updateLppTotalPreview()" placeholder="0">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Retrait (CHF)</label>
+        <input type="number" step="0.01" class="form-input" id="lppFormRetrait" oninput="updateLppTotalPreview()" placeholder="0">
+      </div>
+    </div>
+    <div style="background:var(--bg3);border-radius:12px;padding:12px 14px;margin-bottom:14px">
+      <div style="font-size:10px;color:var(--muted);margin-bottom:4px">Total LPP calculé automatiquement</div>
+      <div style="font-size:18px;font-weight:500;color:#4d9fff">CHF <span id="lppFormTotalPreview">—</span></div>
+      <div style="font-size:10px;color:var(--muted);margin-top:2px" id="lppFormTotalBase">Base: dernier total connu</div>
+    </div>
+    <button class="btn-primary" onclick="saveLppEntry()">Enregistrer</button>
+  </div>
+</div>
+
+<!-- 3A Modal -->
+<div class="modal-overlay" id="p3aModal" onclick="if(event.target===this)closeModal('p3aModal')">
+  <div class="modal">
+    <div class="modal-title">
+      Nouvelle transaction 3A
+      <button class="modal-close" onclick="closeModal('p3aModal')">✕</button>
+    </div>
+
+    <!-- Sélecteur pilier -->
+    <div class="form-group">
+      <label class="form-label">Pilier</label>
+      <div class="p3a-seg" id="p3aFormPilierSeg">
+        <button class="p3a-seg-btn active" data-val="swissquote" onclick="p3aSegSelect('p3aFormPilierSeg',this);p3aUpdateForm()">Swissquote</button>
+        <button class="p3a-seg-btn" data-val="mobiliere" onclick="p3aSegSelect('p3aFormPilierSeg',this);p3aUpdateForm()">La Mobilière</button>
+      </div>
+    </div>
+
+    <!-- Sélecteur type -->
+    <div class="form-group">
+      <label class="form-label">Type</label>
+      <div class="p3a-seg" id="p3aFormTypeSeg">
+        <button class="p3a-seg-btn active" data-val="versement" onclick="p3aSegSelect('p3aFormTypeSeg',this);p3aUpdateForm()">Versement</button>
+        <button class="p3a-seg-btn" data-val="achat" onclick="p3aSegSelect('p3aFormTypeSeg',this);p3aUpdateForm()">Achat parts</button>
+        <button class="p3a-seg-btn" data-val="vente" onclick="p3aSegSelect('p3aFormTypeSeg',this);p3aUpdateForm()">Vente parts</button>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Date</label>
+      <input type="date" class="form-input" id="p3aFormDate">
+    </div>
+
+    <!-- Champs versement -->
+    <div id="p3aFieldsVersement">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Montant versé (CHF)</label>
+          <input type="number" step="0.01" class="form-input" id="p3aFormVersement" oninput="p3aUpdatePreview()" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Dividendes (CHF)</label>
+          <input type="number" step="0.01" class="form-input" id="p3aFormDividendes" oninput="p3aUpdatePreview()" placeholder="0">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Retrait (CHF)</label>
+        <input type="number" step="0.01" class="form-input" id="p3aFormRetrait" oninput="p3aUpdatePreview()" placeholder="0">
+      </div>
+    </div>
+
+    <!-- Champs achat parts (Swissquote uniquement) -->
+    <div id="p3aFieldsAchat" style="display:none">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Nbre de parts</label>
+          <input type="number" step="0.0001" class="form-input" id="p3aFormNbParts" oninput="p3aUpdatePreview()" placeholder="0.0000">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Prix unitaire (CHF)</label>
+          <input type="number" step="0.01" class="form-input" id="p3aFormPrixUnit" oninput="p3aUpdatePreview()" placeholder="0.00">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Versement cash simultané (CHF)</label>
+        <input type="number" step="0.01" class="form-input" id="p3aFormVersementAchat" oninput="p3aUpdatePreview()" placeholder="0">
+      </div>
+    </div>
+
+    <!-- Champs vente parts -->
+    <div id="p3aFieldsVente" style="display:none">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Nbre de parts vendues</label>
+          <input type="number" step="0.0001" class="form-input" id="p3aFormNbPartsVente" oninput="p3aUpdatePreview()" placeholder="0.0000">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Prix de vente unitaire (CHF)</label>
+          <input type="number" step="0.01" class="form-input" id="p3aFormPrixVente" oninput="p3aUpdatePreview()" placeholder="0.00">
+        </div>
+      </div>
+    </div>
+
+    <!-- Preview -->
+    <div style="background:var(--bg3);border-radius:12px;padding:12px 14px;margin-bottom:14px">
+      <div style="font-size:10px;color:var(--muted);margin-bottom:4px" id="p3aPreviewLabel">Montant de la transaction</div>
+      <div style="font-size:18px;font-weight:500;color:#fb923c">CHF <span id="p3aFormTotalPreview">—</span></div>
+      <div style="font-size:10px;color:var(--muted);margin-top:2px" id="p3aFormTotalBase"></div>
+    </div>
+
+    <button class="btn-primary" style="background:#fb923c" onclick="saveP3aEntry()">Enregistrer</button>
+  </div>
+</div>
+</div>
+
+<!-- FAB LPP global -->
+<button onclick="openLppModal()" id="lppFab" style="display:none;position:fixed;bottom:80px;right:20px;width:52px;height:52px;border-radius:50%;background:#4d9fff;border:none;color:white;cursor:pointer;box-shadow:0 4px 20px rgba(77,159,255,.4);align-items:center;justify-content:center;z-index:500;transition:all .2s">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+</button>
+<!-- FAB 3A global -->
+<button onclick="openP3aModal()" id="p3aFab" style="display:none;position:fixed;bottom:80px;right:20px;width:52px;height:52px;border-radius:50%;background:#fb923c;border:none;color:white;cursor:pointer;box-shadow:0 4px 20px rgba(251,146,60,.4);align-items:center;justify-content:center;z-index:500;transition:all .2s">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+</button>
+<div class="bottom-nav">
+  <button class="nav-btn active" id="nav-lpp" onclick="showPage('lpp')">
+    <span class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="3"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg></span>LPP
+  </button>
+  <button class="nav-btn" id="nav-3a" onclick="showPage('3a')">
+    <span class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></span>3A
+  </button>
+</div>
+
+<script>
+
+
+
+// ════════════════════════════════════════
+//  CONFIG
+// ════════════════════════════════════════
+// Google Sheets removed — using Google Drive
+const CASH_SOLDE_INITIAL = 43420.18;   // ← ton solde cash au 01.01.2024
+const SAVING_OBJECTIF    = 600;
+
+const C = {
+  epargne:'#34d399', interets:'#fb923c', rachat:'#60a5fa',
+  lpp:'#4d9fff', rouge:'#f87171', muted:'#5a5a72', bg3:'#1a1a1f'
+};
+
+// ════════════════════════════════════════
+//  DEMO DATA
+// ════════════════════════════════════════
+const DEMO_LPP = [
+  { date:'2023-12-01', epargne:0,       interets:0,     rachat:0, retrait:0,    total:48558 },
+  { date:'2024-01-01', epargne:1381.25, interets:50.63, rachat:0, retrait:0,    total:49989.88 },
+  { date:'2024-02-01', epargne:1381.25, interets:50.63, rachat:0, retrait:0,    total:51421.76 },
+  { date:'2024-03-01', epargne:1381.25, interets:50.63, rachat:0, retrait:0,    total:52853.64 },
+  { date:'2024-04-01', epargne:1381.25, interets:50.63, rachat:0, retrait:0,    total:54285.52 },
+  { date:'2024-05-01', epargne:1381.25, interets:50.63, rachat:0, retrait:0,    total:55717.40 },
+  { date:'2024-06-01', epargne:1381.25, interets:50.63, rachat:0, retrait:0,    total:57149.28 },
+  { date:'2024-07-01', epargne:1381.25, interets:50.63, rachat:0, retrait:0,    total:58581.16 },
+  { date:'2024-08-01', epargne:1381.25, interets:50.63, rachat:0, retrait:0,    total:60013.04 },
+  { date:'2024-09-01', epargne:1381.25, interets:50.63, rachat:0, retrait:0,    total:61444.92 },
+  { date:'2024-10-01', epargne:1381.25, interets:50.63, rachat:5000, retrait:0, total:67876.80 },
+  { date:'2024-11-01', epargne:1381.25, interets:50.63, rachat:0, retrait:0,    total:69308.68 },
+  { date:'2024-12-01', epargne:1381.25, interets:55.85, rachat:0, retrait:0,    total:70745.78 },
+  { date:'2025-01-01', epargne:1381.25, interets:74.80, rachat:0, retrait:0,    total:72201.83 },
+  { date:'2025-02-01', epargne:1381.25, interets:74.80, rachat:0, retrait:0,    total:73657.88 },
+  { date:'2025-03-01', epargne:1381.25, interets:74.80, rachat:0, retrait:0,    total:75113.93 },
+  { date:'2025-04-01', epargne:1491.65, interets:74.80, rachat:8000, retrait:0, total:84680.38 },
+  { date:'2025-05-01', epargne:1436.50, interets:74.80, rachat:0, retrait:0,    total:86191.68 },
+  { date:'2025-06-01', epargne:1436.50, interets:74.80, rachat:0, retrait:0,    total:87702.98 },
+  { date:'2025-07-01', epargne:1436.50, interets:74.80, rachat:0, retrait:0,    total:89214.28 },
+  { date:'2025-08-01', epargne:1436.50, interets:74.80, rachat:0, retrait:0,    total:90725.58 },
+  { date:'2025-09-01', epargne:1436.50, interets:74.80, rachat:0, retrait:0,    total:92236.88 },
+  { date:'2025-10-01', epargne:1436.50, interets:74.80, rachat:0, retrait:0,    total:93748.18 },
+  { date:'2025-11-01', epargne:1436.50, interets:74.80, rachat:0, retrait:0,    total:95259.48 },
+  { date:'2025-12-01', epargne:1436.50, interets:74.80, rachat:0, retrait:67000, total:29770.78 },
+  { date:'2026-01-01', epargne:1386.50, interets:25.10, rachat:0, retrait:0,    total:31182.38 },
+  { date:'2026-02-01', epargne:1436.50, interets:25.10, rachat:0, retrait:0,    total:32643.98 },
+];
+
+// Demo 3A — versements 600/mois, rendement ~6%/an, retrait partiel dec 2025
+const DEMO_3A = (() => {
+  const rows = [];
+  // Swissquote : versements mensuels 2024 + investissements trimestriels
+  const sqVers = [
+    ['2024-01-01','swissquote','versement',600,0],
+    ['2024-02-01','swissquote','versement',600,0],
+    ['2024-03-01','swissquote','versement',600,0],
+    ['2024-04-01','swissquote','versement',600,0],
+    ['2024-05-01','swissquote','versement',600,0],
+    ['2024-06-01','swissquote','versement',600,25],  // dividendes juin
+    ['2024-07-01','swissquote','versement',600,0],
+    ['2024-08-01','swissquote','versement',600,0],
+    ['2024-09-01','swissquote','versement',600,0],
+    ['2024-10-01','swissquote','versement',600,0],
+    ['2024-11-01','swissquote','versement',600,0],
+    ['2024-12-01','swissquote','versement',600,42],  // dividendes déc
+    ['2025-01-01','swissquote','versement',600,0],
+    ['2025-02-01','swissquote','versement',600,0],
+    ['2025-03-01','swissquote','versement',600,0],
+    ['2025-04-01','swissquote','versement',600,0],
+    ['2025-05-01','swissquote','versement',600,0],
+    ['2025-06-01','swissquote','versement',600,28],  // dividendes juin
+    ['2026-03-01','swissquote','versement',200,0],
+  ];
+  // Investissements SQ trimestriels (achat de parts)
+  const sqInv = [
+    ['2024-03-15','swissquote','investissement',0,0,18.5,108.2],
+    ['2024-06-15','swissquote','investissement',0,0,16.8,111.5],
+    ['2024-09-15','swissquote','investissement',0,0,17.2,109.8],
+    ['2024-12-15','swissquote','investissement',0,0,16.5,115.0],
+    ['2025-03-15','swissquote','investissement',0,0,15.8,114.2],
+    ['2025-06-15','swissquote','investissement',0,0,17.0,112.8],
+  ];
+  // La Mobilière : versements annuels + intérêts
+  const mobVers = [
+    ['2024-01-01','mobiliere','versement',1200,0,0,12.5],
+    ['2024-07-01','mobiliere','versement',1200,0,0,0],
+    ['2024-12-31','mobiliere','versement',0,8.5,0,0],   // frais + intérêts
+    ['2025-01-01','mobiliere','versement',1200,0,0,15.2],
+    ['2025-07-01','mobiliere','versement',1200,0,0,0],
+    ['2025-12-31','mobiliere','versement',0,9.0,0,0],
+    ['2026-01-01','mobiliere','versement',1200,0,0,0],
+  ];
+
+  sqVers.forEach(r => rows.push({
+    date:r[0], pilier:r[1], type:r[2],
+    versement:r[3], dividendes:r[4],
+    frais:0, interets:0, nbParts:0, prixUnit:0, retrait:0
+  }));
+  sqInv.forEach(r => rows.push({
+    date:r[0], pilier:r[1], type:r[2],
+    versement:0, dividendes:0, frais:0, interets:0,
+    nbParts:r[6], prixUnit:r[5], retrait:0
+  }));
+  mobVers.forEach(r => rows.push({
+    date:r[0], pilier:r[1], type:r[2],
+    versement:r[3], frais:r[4], retrait:r[5], interets:r[6],
+    dividendes:0, nbParts:0, prixUnit:0
+  }));
+
+  return rows.sort((a,b)=>a.date.localeCompare(b.date));
+})()
+
+// ════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════
+let lppData      = [];
+
+
+let lppPeriod    = '6m';
+
+let lppLineC = null, lppAreaC = null, lppBarC = null;
+
+// ════════════════════════════════════════
+//  UTILS
+// ════════════════════════════════════════
+const fmt     = n => n.toLocaleString('fr-CH', {minimumFractionDigits:0, maximumFractionDigits:0});
+const fmtDate = s => new Date(s).toLocaleDateString('fr-CH', {month:'short', year:'2-digit'});
+
+function filterPeriod(data, period, dateKey='date') {
+  if (period === 'all') return data;
+  let c = new Date();
+  if (period === 'ytd') c = new Date(c.getFullYear(), 0, 1);
+  else if (period === '6m') c.setMonth(c.getMonth()-6);
+  else if (period === '6m') { c.setMonth(c.getMonth()-6); }
+  else if (period === '1y') c.setFullYear(c.getFullYear()-1);
+  else if (period === '5y') c.setFullYear(c.getFullYear()-5);
+  return data.filter(d => new Date(d[dateKey]) >= c);
+}
+
+function monthKey(dateStr) {
+  return dateStr.slice(0,7); // "2024-01"
+}
+
+function tooltipOpts(lpp=true, showTotal=false) {
+  return {
+    backgroundColor: document.body.classList.contains('light') ? '#ffffff' : '#1a1a25',
+    borderColor:     document.body.classList.contains('light') ? '#e0e0ea' : '#3a3a50',
+    borderWidth:1,
+    titleColor: lpp ? '#4d9fff' : '#34d399',
+    bodyColor:'#e2e2ec',
+    titleFont:{family:'Roboto',size:11}, bodyFont:{family:'Roboto',size:11},
+    footerFont:{family:'Roboto',size:12, weight:'bold'},
+    footerColor:'#ffffff',
+    callbacks:{
+      label: ctx => ctx.raw > 0 ? `${ctx.dataset.label}: CHF ${fmt(ctx.raw)}` : null,
+      footer: showTotal ? items => {
+        const total = items.reduce((s,i) => s + (i.raw||0), 0);
+        return `Total  CHF ${fmt(total)}`;
+      } : undefined
+    }
+  };
+}
+
+// ════════════════════════════════════════
+//  NAV
+// ════════════════════════════════════════
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  const page = document.getElementById('page-'+name);
+  if (!page) { console.warn('Page not found:', name); return; }
+  page.classList.add('active');
+  const navBtn = document.getElementById('nav-'+name);
+  if (navBtn) navBtn.classList.add('active');
+
+  // Render
+  if (name === 'lpp')             renderLpp();
+  if (name === '3a')              renderP3a();
+  if (name === 'lppTransactions') renderLppTxList();
+  if (name === 'p3aTransactions') renderP3aTxList();
+
+
+
+  // Avatar header — icône + couleur de l'onglet actif
+  const _avatarIcons = {
+    lpp:             { stroke:'#4d9fff', path:'<rect x="2" y="7" width="20" height="14" rx="3"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/>' },
+    lppTransactions: { stroke:'#4d9fff', path:'<rect x="2" y="7" width="20" height="14" rx="3"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/>' },
+    '3a':            { stroke:'#fb923c', path:'<path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>' },
+    p3aTransactions: { stroke:'#fb923c', path:'<path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>' },
+    cash:            { stroke:'#34d399', path:'<rect x="2" y="5" width="20" height="14" rx="3"/><circle cx="12" cy="12" r="3"/><path d="M2 10h3M19 10h3M2 14h3M19 14h3"/>' },
+    total:           { stroke:'#4d9fff', path:'<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>' },
+    invest:          { stroke:'#a78bfa', path:'<line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><circle cx="12" cy="12" r="4"/>' },
+  };
+  const _av = document.getElementById('headerAvatar');
+  const _ai = document.getElementById('headerAvatarIcon');
+  const _avd = _avatarIcons[name] || { stroke:'var(--muted)', path:'<circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>' };
+  if (_av) { _av.style.borderColor = _avd.stroke; _av.style.background = _avd.stroke.startsWith('#') ? _avd.stroke+'18' : 'var(--bg3)'; }
+  if (_ai) { _ai.setAttribute('stroke', _avd.stroke); _ai.innerHTML = _avd.path; }
+
+  // Header title dynamique
+  const _titles = {lpp:'Caisse de pension', '3a':'3ème Pilier', lppTransactions:'Caisse de pension', p3aTransactions:'3ème Pilier'};
+  const _ht = document.getElementById('headerTitle');
+  if (_ht) _ht.textContent = _titles[name] || 'Patrimoine';
+
+  // FABs — always hide both first, then show the right one
+  const fabLpp = document.getElementById('lppFab');
+  const fab3a  = document.getElementById('p3aFab');
+  if (fabLpp) fabLpp.style.display = 'none';
+  if (fab3a)  fab3a.style.display  = 'none';
+  if (name === 'lpp' || name === 'lppTransactions') {
+    if (fabLpp) fabLpp.style.display = 'flex';
+  }
+  if (name === '3a' || name === 'p3aTransactions') {
+    if (fab3a) fab3a.style.display = 'flex';
+  }
+}
+
+// ════════════════════════════════════════
+//  LPP
+// ════════════════════════════════════════
+function setLppPeriod(p, btn) {
+  lppPeriod = p;
+  document.querySelectorAll('#page-lpp .lpp-pill').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderLpp();
+}
+
+function groupByMonth(data) {
+  // Fusionner les entrées du même mois : somme des champs, garder le dernier total
+  const map = {};
+  data.forEach(d => {
+    const k = d.date.slice(0,7); // YYYY-MM
+    if (!map[k]) map[k] = { date: d.date, epargne:0, interets:0, rachat:0, retrait:0, total:0 };
+    map[k].epargne  += d.epargne  || 0;
+    map[k].interets += d.interets || 0;
+    map[k].rachat   += d.rachat   || 0;
+    map[k].retrait  += d.retrait  || 0;
+    map[k].total     = d.total; // garder le dernier total du mois
+    map[k].date      = d.date;  // garder la dernière date du mois
+  });
+  return Object.values(map).sort((a,b) => a.date.localeCompare(b.date));
+}
+
+function renderLpp() {
+  const rawData = lppData.slice(1);
+  if (!rawData.length) return;
+  const data   = groupByMonth(rawData);
+  const fil    = filterPeriod(data, lppPeriod);
+  const latest = data[data.length - 1];
+  if (!latest) return;
+
+  const capInit = lppData[0] ? lppData[0].total : 0;
+  const total   = latest.total;
+  const sumE    = data.reduce((s,d) => s + (d.epargne||0),  0);
+  const sumI    = data.reduce((s,d) => s + (d.interets||0), 0);
+  const sumR    = data.reduce((s,d) => s + (d.rachat||0),   0);
+  const sumRet  = data.reduce((s,d) => s + (d.retrait||0),  0);
+
+  // ── COUNT-UP (fires on every call: tab switch + filtre) ──
+  const valEl  = document.getElementById('lppVal');
+  const heroEl = document.getElementById('lppHeroNum');
+  const from   = parseFloat((valEl.textContent || '0').replace(/[\s']/g, '')) || 0;
+  clearInterval(valEl._t);
+  heroEl.classList.remove('lpp-num-animate');
+  void heroEl.offsetWidth; // reflow pour reset animation CSS
+  heroEl.classList.add('lpp-num-animate');
+  let frame = 0;
+  const FRAMES = 40, MS = 600;
+  valEl._t = setInterval(() => {
+    frame++;
+    const ease = 1 - Math.pow(1 - frame / FRAMES, 3);
+    valEl.textContent = fmt(Math.round(from + (total - from) * ease));
+    if (frame >= FRAMES) { clearInterval(valEl._t); valEl.textContent = fmt(total); }
+  }, MS / FRAMES);
+
+  // ── YTD pill ──
+  const yr       = new Date().getFullYear();
+  const firstYr  = data.find(d => d.date.startsWith(yr + ''));
+  const baseYtd  = firstYr ? data[Math.max(0, data.indexOf(firstYr) - 1)].total : capInit;
+  const ytdAmt   = total - baseYtd;
+  const ytdPct   = baseYtd > 0 ? ytdAmt / baseYtd * 100 : 0;
+  const ytdUp    = ytdAmt >= 0;
+  const pill     = document.getElementById('lppYtdPill');
+  pill.className = 'lpp-ytd-pill ' + (ytdUp ? 'up' : 'down');
+  pill.textContent = (ytdUp ? '▲ +CHF ' : '▼ -CHF ') + fmt(Math.abs(ytdAmt))
+                   + '  ' + (ytdUp ? '+' : '') + ytdPct.toFixed(1) + '%';
+  document.getElementById('lppYtdSub').textContent = 'depuis janv. ' + yr;
+
+  // ── KPI GRID 2×2 avec barre de poids ──
+  const sumEAll = data.reduce((s,d)=>s+(d.epargne||0),0); const sumRetAll = data.reduce((s,d)=>s+(d.retrait||0),0);
+  const epargneNet = capInit + sumEAll - sumRetAll;
+  const kpis = [
+    { label:'Épargne',  val:sumE,   base:epargneNet, col:'#34d399' },
+    { label:'Intérêts', val:sumI,   base:sumI,       col:'#fb923c' },
+    { label:'Rachats',  val:sumR,   base:sumR,       col:'#60a5fa' },
+    { label:'Retrait',  val:sumRet, base:sumRet,     col:'#f87171' },
+  ];
+  document.getElementById('lppKpiGrid').innerHTML = kpis.map(k => {
+    const pct     = total > 0 ? Math.min(k.base / total * 100, 100) : 0;
+    const display = k.val > 0 ? fmt(k.val) : '—';
+    const pctLbl  = k.val > 0 && total > 0 ? (k.base / total * 100).toFixed(1) + '%' : '';
+    return `<div class="lpp-kpi-item">
+      <div class="lpp-kpi-lbl">${k.label}</div>
+      <div class="lpp-kpi-val" style="color:${k.col}">${display}</div>
+      ${pctLbl ? `<div class="lpp-kpi-pct">${pctLbl}</div>` : ''}
+      <div class="lpp-kpi-foot"><div class="lpp-kpi-foot-fill" style="width:${pct.toFixed(1)}%;background:${k.col}"></div></div>
+    </div>`;
+  }).join('');
+
+  // ── LINE CHART ──
+  const lineCtx = document.getElementById('lppLineChart').getContext('2d');
+  const gLine = lineCtx.createLinearGradient(0, 0, 0, 110);
+  gLine.addColorStop(0, 'rgba(77,159,255,.22)');
+  gLine.addColorStop(1, 'rgba(77,159,255,0)');
+  if (lppLineC) lppLineC.destroy();
+  lppLineC = new Chart(lineCtx, {
+    type: 'line',
+    data: {
+      labels: fil.map(d => new Date(d.date + 'T00:00:00').toLocaleDateString('fr-CH', {month:'short', year:'2-digit'})),
+      datasets: [{
+        data: fil.map(d => d.total),
+        borderColor: '#4d9fff', borderWidth: 2,
+        fill: true, backgroundColor: gLine, tension: .4,
+        pointRadius: 0, pointHoverRadius: 5,
+        pointHoverBackgroundColor: '#4d9fff',
+        pointHoverBorderColor: '#fff', pointHoverBorderWidth: 2,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      animation: { duration: 550, easing: 'easeOutCubic' },
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1a1a25', borderColor: '#3a3a50', borderWidth: 1,
+          titleColor: '#4d9fff', bodyColor: '#e2e2ec',
+          titleFont: {family:'Roboto', size:11, weight:'600'},
+          bodyFont:  {family:'DM Mono', size:12},
+          padding: 10, displayColors: false,
+          callbacks: { title: i => i[0].label, label: i => 'CHF ' + fmt(i.raw) }
+        }
+      },
+      scales: { x: {display:false}, y: {display:false, grace:'5%'} }
+    }
+  });
+
+  // Axis labels
+  const axEl = document.getElementById('lppAxisRow');
+  if (axEl && fil.length > 1) {
+    const n    = Math.min(6, fil.length);
+    const idxs = Array.from({length:n}, (_, i) => Math.round(i * (fil.length - 1) / (n - 1)));
+    axEl.innerHTML = idxs.map(i => {
+      const lbl = new Date(fil[i].date + 'T00:00:00').toLocaleDateString('fr-CH', {month:'short', year:'2-digit'});
+      const pct = (i / (fil.length - 1) * 100).toFixed(1) + '%';
+      return `<span style="left:${pct}">${lbl}</span>`;
+    }).join('');
+  }
+
+  // ── BAR STACKED: Évolution du capital — gradient, radius, animation ──
+  let tmpE = capInit, tmpI = 0, tmpR = 0;
+  const cumMap = {};
+  data.forEach(d => {
+    tmpE += (d.epargne||0) - (d.retrait||0); tmpI += d.interets||0; tmpR += d.rachat||0;
+    cumMap[d.date] = {cumE:tmpE, cumI:tmpI, cumR:tmpR};
+  });
+  const areaData = fil.map(d => ({label:fmtDate(d.date), ...cumMap[d.date]}));
+  const aCtx = document.getElementById('lppAreaChart').getContext('2d');
+  // gradients verticaux par couleur (haut opaque → bas translucide)
+  const gE = aCtx.createLinearGradient(0,0,0,160); gE.addColorStop(0,'rgba(52,211,153,.92)'); gE.addColorStop(1,'rgba(52,211,153,.45)');
+  const gI = aCtx.createLinearGradient(0,0,0,160); gI.addColorStop(0,'rgba(251,146,60,.92)');  gI.addColorStop(1,'rgba(251,146,60,.45)');
+  const gR = aCtx.createLinearGradient(0,0,0,160); gR.addColorStop(0,'rgba(96,165,250,.92)');  gR.addColorStop(1,'rgba(96,165,250,.45)');
+  if (lppAreaC) lppAreaC.destroy();
+  lppAreaC = new Chart(aCtx, {
+    type: 'bar',
+    data: {
+      labels: areaData.map(d => d.label),
+      datasets: [
+        { label:'Épargne',  data:areaData.map(d=>d.cumE), backgroundColor:gE, borderRadius:0, stack:'s', borderSkipped:'bottom' },
+        { label:'Intérêts', data:areaData.map(d=>d.cumI), backgroundColor:gI, borderRadius:0, stack:'s', borderSkipped:'bottom' },
+        { label:'Rachat',   data:areaData.map(d=>d.cumR), backgroundColor:gR, borderRadius:{topLeft:3,topRight:3,bottomLeft:0,bottomRight:0}, stack:'s', borderSkipped:'bottom' },
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      animation: {
+        duration: 700,
+        easing: 'easeOutQuart',
+        // les barres montent du bas
+        y: { from: (ctx) => ctx.chart.scales.y.getPixelForValue(0) }
+      },
+      interaction: {intersect:false, mode:'index'},
+      plugins: {
+        legend: {labels:{color:C.muted, font:{family:'Roboto',size:9}, boxWidth:8, boxHeight:8, padding:8}},
+        tooltip: tooltipOpts(true, true)
+      },
+      scales: {
+        x: {stacked:true, grid:{display:false}, ticks:{color:C.muted, font:{family:'DM Mono',size:8}, maxTicksLimit:8}, border:{display:false}},
+        y: {stacked:true, grid:{color:'rgba(255,255,255,.04)'}, ticks:{color:C.muted, font:{family:'DM Mono',size:9}, callback:v=>`${(v/1000).toFixed(0)}k`, maxTicksLimit:5}, border:{display:false}}
+      },
+      barThickness: areaData.length > 18 ? 7 : 13
+    }
+  });
+
+  // ── BAR CHART: Versements mensuels — gradient comme line chart ──
+  const bCtx = document.getElementById('lppBarChart').getContext('2d');
+  const gBE = bCtx.createLinearGradient(0,0,0,140); gBE.addColorStop(0,'rgba(52,211,153,.9)'); gBE.addColorStop(1,'rgba(52,211,153,.3)');
+  const gBI = bCtx.createLinearGradient(0,0,0,140); gBI.addColorStop(0,'rgba(251,146,60,.9)');  gBI.addColorStop(1,'rgba(251,146,60,.3)');
+  if (lppBarC) lppBarC.destroy();
+  lppBarC = new Chart(bCtx, {
+    type: 'bar',
+    data: {
+      labels: fil.map(d => fmtDate(d.date)),
+      datasets: [
+        { label:'Épargne',  data:fil.map(d=>d.epargne),  backgroundColor:gBE, borderRadius:3, borderSkipped:'bottom' },
+        { label:'Intérêts', data:fil.map(d=>d.interets), backgroundColor:gBI, borderRadius:3, borderSkipped:'bottom' },
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      animation: { duration:600, easing:'easeOutCubic' },
+      interaction: {intersect:false, mode:'index'},
+      plugins: {
+        legend: {labels:{color:C.muted, font:{family:'Roboto',size:9}, boxWidth:8, boxHeight:8, padding:8}},
+        tooltip: tooltipOpts(true, true)
+      },
+      scales: {
+        x: {stacked:true, grid:{display:false}, ticks:{color:C.muted, font:{family:'Roboto',size:8}, maxTicksLimit:8}, border:{display:false}},
+        y: {stacked:true, grid:{color:'#1a1a1f'}, ticks:{color:C.muted, font:{family:'Roboto',size:9}, maxTicksLimit:4}, border:{display:false}}
+      },
+      barThickness: fil.length > 18 ? 8 : 14
+    }
+  });
+}
+// ════════════════════════════════════════
+//  CASH
+// ════════════════════════════════════════
+function setCashPeriod(p, btn) {
+  cashPeriod = p;
+  document.querySelectorAll('#page-cash .period-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+
+}
+
+
+// ════════════════════════════════════════
+//  3ÈME PILIER
+// ════════════════════════════════════════
+const P3A_ISIN   = 'CH1110134157';
+const P3A_TICKER = 'CH1110134157.SW'; // Yahoo Finance ticker
+
+
+
+async function fetchP3aPrice() {
+  const btn = document.getElementById('p3aPriceBtn');
+  btn.textContent = '…';
+  btn.disabled = true;
+  try {
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${P3A_TICKER}?interval=1d&range=5d`;
+    const res = await fetch(url);
+    const d   = await res.json();
+    const price = d.chart.result[0].meta.regularMarketPrice;
+    const currency = d.chart.result[0].meta.currency;
+    const info = document.getElementById('p3aPriceInfo');
+    info.style.display = 'block';
+    info.textContent = `Valeur actuelle du fond : ${currency} ${price.toFixed(2)}`;
+    btn.textContent = '✓ Prix fond';
+  } catch(e) {
+    document.getElementById('p3aPriceInfo').style.display = 'block';
+    document.getElementById('p3aPriceInfo').textContent = 'Prix non disponible — saisis le rendement manuellement';
+  }
+  btn.disabled = false;
+}
+
+
+// ── Lookup prix UBS Vitainvest par date (ou plus proche précédent) ──
+
+
+
+
+// ── Graphe performance Swissquote — ligne verte/rouge ──
+
+
+// Génère la liste des mois YYYY-MM entre start et end (inclus)
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ── Import CSV historique UBS Vitainvest ──
+
+
+
+
+
+
+// ════════════════════════════════════════
+//  ANNUAL CHART
+// ════════════════════════════════════════
+
+
+
+
+
+
+
+
+
+
+
+
+// ════════════════════════════════════════
+//  TOTAL
+// ════════════════════════════════════════
+
+
+
+
+
+// ════════════════════════════════════════
+//  THEME
+// ════════════════════════════════════════
+function toggleTheme() {
+  const isLight = document.body.classList.toggle('light');
+  document.getElementById('themeIcon').textContent = isLight ? '🌙' : '☀️';
+  localStorage.setItem('theme', isLight ? 'light' : 'dark');
+  // Re-render active page to update chart colors
+  const activePage = document.querySelector('.page.active').id.replace('page-','');
+  if (activePage === 'lpp') renderLpp();
+}
+
+
+// ════════════════════════════════════════
+//  TRANSACTIONS
+// ════════════════════════════════════════
+
+
+
+
+// ════════════════════════════════════════
+//  FETCH GOOGLE SHEETS
+// ════════════════════════════════════════
+
+
+
+// ════════════════════════════════════════
+//  LOCAL STORAGE
+// ════════════════════════════════════════
+const LS_KEYS = { lpp:'fin_lpp', sal:'fin_sal', dep:'fin_dep', p3a:'fin_3a', invest:'fin_invest' };
+
+function lsLoad(key) {
+  try { return JSON.parse(localStorage.getItem(LS_KEYS[key]) || 'null'); } catch { return null; }
+}
+function lsSave(key, data) {
+  try { localStorage.setItem(LS_KEYS[key], JSON.stringify(data)); } catch(e) { alert('Erreur sauvegarde: ' + e); }
+}
+
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  // Pre-fill date with today
+  const dateInput = document.querySelector('#'+id+' input[type="date"]');
+  if (dateInput && !dateInput.value) {
+    const t = new Date();
+    dateInput.value = `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
+  }
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+function exportData(key) {
+  const data = lsLoad(key);
+  if (!data || !data.length) { alert('Pas de données à exporter'); return; }
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `finances_${key}_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+}
+
+function importData(key) {
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = '.json';
+  inp.onchange = e => {
+    const f = e.target.files[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = ev => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if (!Array.isArray(data)) throw new Error('Format invalide');
+        lsSave(key, data);
+        alert(`${data.length} entrées importées !`);
+        location.reload();
+      } catch(err) { alert('Erreur import: ' + err.message); }
+    };
+    r.readAsText(f);
+  };
+  inp.click();
+}
+
+function exportAllData() {
+  const data = {
+    lpp: lppData,
+    p3a: data3A,
+    meta: { version:1, updatedAt: new Date().toISOString() }
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `finances_vf_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+}
+
+async function importFullJSON() {
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = '.json';
+  inp.onchange = async e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      if (typeof data !== 'object') throw new Error('Format invalide');
+      let counts = [];
+      if (data.lpp      && Array.isArray(data.lpp))      { lppData      = recalcLppTotals(data.lpp);   counts.push(`${data.lpp.length} entrées LPP`); }
+
+
+      if (data.p3a      && Array.isArray(data.p3a))      { data3A       = recalcP3aTotals(data.p3a);   counts.push(`${data.p3a.length} entrées 3A`); }
+
+      if (loadToken()) {
+        const status = document.getElementById('globalStatus');
+        status.textContent = '⏳ Sauvegarde sur Drive…';
+        await driveSaveAll();
+      }
+      refreshAllPages();
+      renderLppTxList();
+      alert('Import réussi ! ' + counts.join(', '));
+    } catch(err) {
+      alert('Erreur import: ' + err.message);
+    }
+  };
+  inp.click();
+}
+
+
+
+// ════════════════════════════════════════
+//  3A — État
+// ════════════════════════════════════════
+let data3A    = [];
+let p3aPeriod = '6m';
+let p3aPilier = 'all';
+let p3aLineC = null, p3aAreaC = null, p3aBarC = null, p3aPerfC = null;
+let p3aEditIdx = -1;
+
+// ── Helpers segmented controls ──
+function p3aSegSelect(segId, btn) {
+  document.querySelectorAll('#'+segId+' .p3a-seg-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+function p3aSegVal(segId) {
+  return document.querySelector('#'+segId+' .p3a-seg-btn.active')?.dataset.val || null;
+}
+
+// ── Affiche les bons champs selon pilier+type ──
+function p3aShowFields(prefix) {
+  const pilier = p3aSegVal(prefix+'PilierSeg');
+  const type   = p3aSegVal(prefix+'TypeSeg');
+  const combos = ['sq_versement','sq_investissement','sq_retrait','mob_versement','mob_investissement','mob_retrait'];
+  combos.forEach(c => {
+    const el = document.getElementById(prefix+'Fields_'+c);
+    if (el) el.style.display = (pilier+'_'+type === c) ? '' : 'none';
+  });
+}
+function p3aUpdateForm()     { p3aShowFields('p3aForm'); p3aUpdatePreview(); }
+function p3aEditUpdateForm() { p3aShowFields('p3aEdit'); }
+
+// ── Preview montant ──
+function p3aUpdatePreview() {
+  const pilier = p3aSegVal('p3aFormPilierSeg');
+  const type   = p3aSegVal('p3aFormTypeSeg');
+  const g = id => parseFloat(document.getElementById(id)?.value) || 0;
+  let val = 0, lbl = 'Montant';
+  if (pilier==='swissquote') {
+    if (type==='versement')     { val = g('p3aForm_sq_versement') + g('p3aForm_sq_dividendes'); lbl='Versement + dividendes'; }
+    if (type==='investissement'){ val = g('p3aForm_sq_nbParts') * g('p3aForm_sq_prixUnit'); lbl='Valeur investie'; }
+    if (type==='retrait')       { val = g('p3aForm_sq_retrait'); lbl='Retrait'; }
+  } else {
+    if (type==='versement')     { val = g('p3aForm_mob_versement') - g('p3aForm_mob_frais') + g('p3aForm_mob_interets'); lbl='Net versement'; }
+    if (type==='investissement'){ val = g('p3aForm_mob_nbParts') * g('p3aForm_mob_prixUnit'); lbl='Valeur investie'; }
+    if (type==='retrait')       { val = g('p3aForm_mob_retrait'); lbl='Retrait'; }
+  }
+  const el = document.getElementById('p3aFormTotalPreview');
+  const ll = document.getElementById('p3aPreviewLabel');
+  if (el) el.textContent = fmt(Math.abs(val));
+  if (ll) ll.textContent = lbl;
+}
+
+// ── Lecture entrée depuis formulaire ──
+function p3aReadForm(prefix) {
+  const pilier = p3aSegVal(prefix+'PilierSeg');
+  const type   = p3aSegVal(prefix+'TypeSeg');
+  const date   = document.getElementById(prefix.replace('Form','Edit').replace('p3a','p3aEdit')+'Date')?.value
+               || document.getElementById('p3aFormDate')?.value
+               || document.getElementById('p3aEditDate')?.value;
+  const g = id => parseFloat(document.getElementById(id)?.value) || 0;
+  let entry = { date, pilier, type, versement:0, dividendes:0, frais:0, interets:0, retrait:0, nbParts:0, prixUnit:0 };
+  if (pilier==='swissquote') {
+    if (type==='versement')     { entry.versement=g(prefix+'_sq_versement'); entry.dividendes=g(prefix+'_sq_dividendes'); }
+    if (type==='investissement'){ entry.nbParts=g(prefix+'_sq_nbParts'); entry.prixUnit=g(prefix+'_sq_prixUnit'); }
+    if (type==='retrait')       { entry.retrait=g(prefix+'_sq_retrait'); }
+  } else {
+    if (type==='versement')     { entry.versement=g(prefix+'_mob_versement'); entry.frais=g(prefix+'_mob_frais'); entry.interets=g(prefix+'_mob_interets'); }
+    if (type==='investissement'){ entry.nbParts=g(prefix+'_mob_nbParts'); entry.prixUnit=g(prefix+'_mob_prixUnit'); }
+    if (type==='retrait')       { entry.retrait=g(prefix+'_mob_retrait'); }
+  }
+  return entry;
+}
+
+// ── Ouvrir modal ──
+function openP3aModal() {
+  p3aSegSelect('p3aFormPilierSeg', document.querySelector('#p3aFormPilierSeg .p3a-seg-btn'));
+  p3aSegSelect('p3aFormTypeSeg',   document.querySelector('#p3aFormTypeSeg .p3a-seg-btn'));
+  p3aUpdateForm();
+  ['p3aForm_sq_versement','p3aForm_sq_dividendes','p3aForm_sq_nbParts','p3aForm_sq_prixUnit','p3aForm_sq_retrait',
+   'p3aForm_mob_versement','p3aForm_mob_frais','p3aForm_mob_interets','p3aForm_mob_nbParts','p3aForm_mob_prixUnit','p3aForm_mob_retrait'
+  ].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const t=new Date(); const ds=`${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
+  document.getElementById('p3aFormDate').value = ds;
+  document.getElementById('p3aFormTotalPreview').textContent = '—';
+  document.getElementById('p3aModal').classList.add('open');
+}
+
+// ── Sauvegarder nouvelle entrée ──
+function saveP3aEntry() {
+  const entry = p3aReadForm('p3aForm');
+  if (!entry.date) { alert('Date obligatoire'); return; }
+  data3A.push(entry);
+  data3A.sort((a,b)=>a.date.localeCompare(b.date));
+  lsSave('p3a', data3A);
+  driveSaveAll();
+  closeModal('p3aModal');
+  renderP3a();
+  renderP3aTxList();
+  showPage('p3aTransactions');
+}
+
+// ── Afficher edit ──
+function showP3aEdit(idx) {
+  p3aEditIdx = idx;
+  const d = data3A[idx];
+  if (!d) return;
+  document.getElementById('p3aEditTitle').textContent =
+    new Date(d.date+'T00:00:00').toLocaleDateString('fr-CH',{month:'long',year:'numeric'}) + ' — ' +
+    (d.type==='investissement'?'Investissement':d.type==='retrait'?'Retrait':'Versement');
+  document.getElementById('p3aEditDate').value = d.date;
+  // Pilier
+  document.querySelectorAll('#p3aEditPilierSeg .p3a-seg-btn').forEach(b=>b.classList.toggle('active', b.dataset.val===(d.pilier||'swissquote')));
+  // Type
+  document.querySelectorAll('#p3aEditTypeSeg .p3a-seg-btn').forEach(b=>b.classList.toggle('active', b.dataset.val===(d.type||'versement')));
+  p3aEditUpdateForm();
+  // Remplir champs
+  const s = id => { const el=document.getElementById(id); if(el) el.value = ''; };
+  const sv = (id,v) => { const el=document.getElementById(id); if(el) el.value = v||''; };
+  if (d.pilier==='swissquote' || !d.pilier) {
+    sv('p3aEdit_sq_versement',   d.versement);
+    sv('p3aEdit_sq_dividendes',  d.dividendes);
+    sv('p3aEdit_sq_nbParts',     d.nbParts);
+    sv('p3aEdit_sq_prixUnit',    d.prixUnit);
+    sv('p3aEdit_sq_retrait',     d.retrait);
+  } else {
+    sv('p3aEdit_mob_versement',  d.versement);
+    sv('p3aEdit_mob_frais',      d.frais);
+    sv('p3aEdit_mob_interets',   d.interets);
+    sv('p3aEdit_mob_nbParts',    d.nbParts);
+    sv('p3aEdit_mob_prixUnit',   d.prixUnit);
+    sv('p3aEdit_mob_retrait',    d.retrait);
+  }
+  showPage('p3aEdit');
+}
+
+function saveP3aEdit() {
+  const pilier = p3aSegVal('p3aEditPilierSeg');
+  const type   = p3aSegVal('p3aEditTypeSeg');
+  const date   = document.getElementById('p3aEditDate').value;
+  if (!date) { alert('Date obligatoire'); return; }
+  const g = id => parseFloat(document.getElementById(id)?.value) || 0;
+  let entry = { date, pilier, type, versement:0, dividendes:0, frais:0, interets:0, retrait:0, nbParts:0, prixUnit:0 };
+  if (pilier==='swissquote') {
+    if (type==='versement')     { entry.versement=g('p3aEdit_sq_versement'); entry.dividendes=g('p3aEdit_sq_dividendes'); }
+    if (type==='investissement'){ entry.nbParts=g('p3aEdit_sq_nbParts'); entry.prixUnit=g('p3aEdit_sq_prixUnit'); }
+    if (type==='retrait')       { entry.retrait=g('p3aEdit_sq_retrait'); }
+  } else {
+    if (type==='versement')     { entry.versement=g('p3aEdit_mob_versement'); entry.frais=g('p3aEdit_mob_frais'); entry.interets=g('p3aEdit_mob_interets'); }
+    if (type==='investissement'){ entry.nbParts=g('p3aEdit_mob_nbParts'); entry.prixUnit=g('p3aEdit_mob_prixUnit'); }
+    if (type==='retrait')       { entry.retrait=g('p3aEdit_mob_retrait'); }
+  }
+  const arr = [...data3A];
+  if (p3aEditIdx >= 0 && p3aEditIdx < arr.length) arr[p3aEditIdx] = entry; else arr.push(entry);
+  data3A = arr.sort((a,b)=>a.date.localeCompare(b.date));
+  lsSave('p3a', data3A);
+  driveSaveAll();
+  renderP3a();
+  renderP3aTxList();
+  showPage('p3aTransactions');
+}
+
+function confirmDeleteP3a() {
+  if (!confirm('Supprimer cette entrée ?')) return;
+  if (p3aEditIdx >= 0) data3A.splice(p3aEditIdx, 1);
+  lsSave('p3a', data3A);
+  driveSaveAll();
+  renderP3a();
+  renderP3aTxList();
+  showPage('p3aTransactions');
+}
+
+// ── Liste des transactions ──
+function renderP3aTxList() {
+  const el = document.getElementById('p3aTxList');
+  if (!el) return;
+  const sorted = [...data3A].sort((a,b)=>b.date.localeCompare(a.date));
+  if (!sorted.length) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:12px;text-align:center;padding:20px">Aucune transaction</div>';
+    return;
+  }
+  el.innerHTML = sorted.map(d => {
+    const idx = data3A.indexOf(d);
+    const isSQ = (d.pilier||'swissquote')==='swissquote';
+    const badge = `<span class="p3a-badge ${isSQ?'p3a-badge-sq':'p3a-badge-mob'}">${isSQ?'SQ':'MOB'}</span>`;
+    let detail = '';
+    if (d.type==='investissement') detail = `${fmt(d.nbParts||0)} parts × CHF ${fmt(d.prixUnit||0)}`;
+    else if (d.type==='retrait')   detail = `Retrait CHF ${fmt(d.retrait||0)}`;
+    else if (isSQ)                 detail = [d.versement?'CHF '+fmt(d.versement):'', d.dividendes?'Div. '+fmt(d.dividendes):''].filter(Boolean).join(' · ');
+    else                           detail = [d.versement?'CHF '+fmt(d.versement):'', d.frais?'Frais -'+fmt(d.frais):'', d.interets?'Int. +'+fmt(d.interets):''].filter(Boolean).join(' · ');
+    const amt = d.type==='retrait' ? d.retrait : d.type==='investissement' ? (d.nbParts||0)*(d.prixUnit||0) : (d.versement||0)+(d.dividendes||0)+(d.interets||0)-(d.frais||0);
+    return `<div class="tx-row" style="cursor:pointer;padding:14px 4px" onclick="showP3aEdit(${idx})">
+      <div style="flex:1">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:2px">${new Date(d.date+'T00:00:00').toLocaleDateString('fr-CH',{month:'long',year:'numeric'})}</div>
+        <div style="font-size:15px;font-weight:600">CHF ${fmt(amt)}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px">${badge} ${detail}</div>
+      </div>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>`;
+  }).join('');
+}
+
+// ── Période ──
+function setP3aPeriod(p, btn) {
+  p3aPeriod = p;
+  document.querySelectorAll('.p3a-pill').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderP3a();
+}
+function p3aSetPilier(pilier, btn) {
+  p3aPilier = pilier;
+  document.querySelectorAll('#p3aPilierSwitch .p3a-switch-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderP3a();
+}
+
+// ── Calculs portefeuille SQ ──
+function p3aCalcSQ(entries) {
+  let parts=0, versements=0, dividendes=0, coutAchat=0, retrait=0;
+  entries.forEach(d => {
+    if (d.type==='investissement') { parts+=(d.nbParts||0); coutAchat+=(d.nbParts||0)*(d.prixUnit||0); }
+    else if (d.type==='retrait')   { retrait+=(d.retrait||0); parts-=(d.nbParts||0); }
+    else { versements+=(d.versement||0); dividendes+=(d.dividendes||0); }
+  });
+  const cash = Math.max(0, Math.round((versements - coutAchat) * 100)/100);
+  return { parts:Math.max(0,parts), versements, dividendes, coutAchat, cash, retrait };
+}
+
+function p3aCalcMob(entries) {
+  let versements=0, frais=0, interets=0, retrait=0, parts=0, coutAchat=0;
+  entries.forEach(d => {
+    if (d.type==='investissement') { parts+=(d.nbParts||0); coutAchat+=(d.nbParts||0)*(d.prixUnit||0); }
+    else if (d.type==='retrait')   { retrait+=(d.retrait||0); }
+    else { versements+=(d.versement||0); frais+=(d.frais||0); interets+=(d.interets||0); }
+  });
+  return { versements, frais, interets, retrait, parts, coutAchat };
+}
+
+// ── Periode start date ──
+function p3aPeriodStart(period) {
+  const now = new Date();
+  if (period==='ytd') return `${now.getFullYear()}-01-01`;
+  if (period==='6m')  { const d=new Date(now); d.setMonth(d.getMonth()-6); return d.toISOString().slice(0,10); }
+  if (period==='1y')  { const d=new Date(now); d.setFullYear(d.getFullYear()-1); return d.toISOString().slice(0,10); }
+  return null;
+}
+
+// ── Génère mois YYYY-MM entre start et end ──
+function p3aMonthRange(start, end) {
+  const months=[]; let d=new Date(start+'-01T00:00:00');
+  const endD=new Date(end+'-01T00:00:00');
+  while(d<=endD){ months.push(d.toISOString().slice(0,7)); d.setMonth(d.getMonth()+1); }
+  return months;
+}
+
+// ── RENDER PRINCIPAL ──
+function renderP3a() {
+  const isSQ  = p3aPilier === 'swissquote';
+  const isMob = p3aPilier === 'mobiliere';
+
+  // Visibilité cartes
+  const cardBar  = document.getElementById('p3aCardBar');
+  const cardPerf = document.getElementById('p3aCardPerf');
+  const cardPlaf = document.getElementById('p3aCardPlafond');
+  if (cardBar)  cardBar.style.display  = isSQ ? 'none' : '';
+  if (cardPerf) cardPerf.style.display = isSQ ? '' : 'none';
+  if (cardPlaf) cardPlaf.style.display = (isSQ||isMob) ? 'none' : '';
+
+  if (!data3A.length) {
+    ['p3aVal','p3aYtdPill','p3aYtdSub','p3aKpiGrid'].forEach(id=>{const el=document.getElementById(id);if(el&&id!=='p3aKpiGrid')el.textContent='—';});
+    return;
+  }
+
+  const sqAll  = data3A.filter(d=>(d.pilier||'swissquote')==='swissquote').sort((a,b)=>a.date.localeCompare(b.date));
+  const mobAll = data3A.filter(d=>d.pilier==='mobiliere').sort((a,b)=>a.date.localeCompare(b.date));
+  const sq  = p3aCalcSQ(sqAll);
+  const mob = p3aCalcMob(mobAll);
+
+  // Valeur SQ : parts × dernier prix connu + cash
+  const lastInvest = sqAll.filter(d=>d.type==='investissement').pop();
+  const sqPrix = lastInvest?.prixUnit || 0;
+  const sqValParts = Math.round(sq.parts * sqPrix * 100)/100;
+  const sqPlusValue = Math.round((sqValParts - sq.coutAchat)*100)/100;
+  const sqValeur = sqValParts + sq.cash;
+  // Valeur MOB : versements - frais + intérêts - retraits (+ valeur parts si investissement)
+  const mobValeur = Math.max(0, Math.round((mob.versements - mob.frais + mob.interets - mob.retrait)*100)/100);
+  const totalConsolide = sqValeur + mobValeur;
+  const displayTotal = isSQ ? sqValeur : isMob ? mobValeur : totalConsolide;
+
+  // ── COUNT-UP ──
+  const valEl=document.getElementById('p3aVal'); const heroEl=document.getElementById('p3aHeroNum');
+  const from=parseFloat((valEl.textContent||'0').replace(/[\s']/g,''))||0;
+  clearInterval(valEl._t); heroEl.classList.remove('lpp-num-animate'); void heroEl.offsetWidth; heroEl.classList.add('lpp-num-animate');
+  let frame=0;
+  valEl._t=setInterval(()=>{ frame++; const ease=1-Math.pow(1-frame/40,3); valEl.textContent=fmt(Math.round(from+(displayTotal-from)*ease)); if(frame>=40){clearInterval(valEl._t);valEl.textContent=fmt(displayTotal);} },15);
+
+  // ── YTD pill ──
+  const yr = new Date().getFullYear();
+  const sqDivYtd = sqAll.filter(d=>d.date.startsWith(yr+'')).reduce((s,d)=>s+(d.dividendes||0),0);
+  const mobVersYtd = mobAll.filter(d=>d.date.startsWith(yr+'')).reduce((s,d)=>s+(d.versement||0)+(d.interets||0)-(d.frais||0),0);
+  // Perf SQ YTD = change valeur parts depuis début d'année (simplifié: sqPlusValue)
+  const ytdSQ  = sqPlusValue + sqDivYtd;
+  const ytdMob = mobVersYtd;
+  let ytdAmt=0, ytdPct=0;
+  if (isSQ)       { ytdAmt=ytdSQ;  ytdPct=sq.coutAchat>0?ytdSQ/sq.coutAchat*100:0; }
+  else if (isMob) { ytdAmt=ytdMob; ytdPct=mobValeur>0?ytdMob/mobValeur*100:0; }
+  else            { ytdAmt=ytdSQ+ytdMob; ytdPct=totalConsolide>0?ytdAmt/totalConsolide*100:0; }
+  const ytdUp=ytdAmt>=0;
+  const pill=document.getElementById('p3aYtdPill');
+  pill.className='lpp-ytd-pill '+(ytdUp?'up':'down');
+  pill.style.background=ytdUp?'rgba(251,146,60,.13)':'rgba(248,113,113,.1)';
+  pill.style.color=ytdUp?'#fb923c':'#f87171';
+  pill.textContent=(ytdUp?'▲ +CHF ':'▼ -CHF ')+fmt(Math.abs(ytdAmt))+'  '+(ytdUp?'+':'')+ytdPct.toFixed(1)+'%';
+  document.getElementById('p3aYtdSub').textContent='depuis janv. '+yr;
+
+  // ── KPIs ──
+  let kpis;
+  if (isSQ) {
+    kpis=[
+      {label:'UBS Vitainvest', val:sqValParts, col:'#fb923c'},
+      {label:'Cash',           val:sq.cash,    col:'#60a5fa'},
+      {label:'Plus-value',     val:Math.abs(sqPlusValue), col:sqPlusValue>=0?'#34d399':'#f87171',
+       prefix:sqPlusValue>=0?'+CHF ':'-CHF ',
+       sub:sq.coutAchat>0?(sqPlusValue>=0?'+':'')+((sqPlusValue/sq.coutAchat)*100).toFixed(1)+'%':null,
+       subCol:sqPlusValue>=0?'#34d399':'#f87171'},
+    ];
+  } else if (isMob) {
+    kpis=[
+      {label:'Versements', val:mob.versements,               col:'#34d399'},
+      {label:'Frais',      val:mob.frais,                    col:'#f87171'},
+      {label:'Intérêts',   val:mob.interets,                 col:'#60a5fa'},
+      {label:'Retrait',    val:mob.retrait,                  col:'#94a3b8'},
+    ];
+  } else {
+    kpis=[
+      {label:'Swissquote',   val:sqValeur,  col:'#fb923c',
+       sub:(sqPlusValue>=0?'▲ +':' ▼ ')+fmt(Math.abs(sqPlusValue))+(sq.coutAchat>0?' ('+(sqPlusValue>=0?'+':'')+((sqPlusValue/sq.coutAchat)*100).toFixed(1)+'%)':''),
+       subCol:sqPlusValue>=0?'#34d399':'#f87171'},
+      {label:'La Mobilière', val:mobValeur, col:'#60a5fa'},
+    ];
+  }
+  document.getElementById('p3aKpiGrid').innerHTML=kpis.map(k=>{
+    const disp=k.prefix?k.prefix+fmt(k.val):'CHF '+fmt(k.val);
+    const pct=displayTotal>0?Math.min(k.val/displayTotal*100,100):0;
+    return `<div class="lpp-kpi-item">
+      <div class="lpp-kpi-lbl">${k.label}</div>
+      <div class="lpp-kpi-val" style="color:${k.col};font-size:12px">${disp}</div>
+      ${k.sub?`<div style="font-size:9px;color:${k.subCol||k.col};margin-top:1px;font-family:'DM Mono',monospace">${k.sub}</div>`:''}
+      <div class="lpp-kpi-foot"><div class="lpp-kpi-foot-fill" style="width:${pct.toFixed(1)}%;background:${k.col}"></div></div>
+    </div>`;
+  }).join('');
+
+  // ── Plafond ──
+  const plafonds={2024:7056,2025:7056,2026:7258};
+  const plafond=plafonds[yr]||7258;
+  const verseAn=data3A.filter(d=>d.date&&d.date.startsWith(yr+'')).reduce((s,d)=>s+(d.versement||0),0);
+  const reste=Math.max(0,plafond-verseAn);
+  const _el=id=>document.getElementById(id);
+  if(_el('p3aPlafondTitle'))  _el('p3aPlafondTitle').textContent=`Plafond ${yr}`;
+  if(_el('p3aPlafondReste'))  {_el('p3aPlafondReste').textContent=reste>0?`Reste CHF ${fmt(reste)}`:'✓ Atteint';_el('p3aPlafondReste').style.color=reste>0?'var(--muted)':'#34d399';}
+  if(_el('p3aPlafondBar'))    {_el('p3aPlafondBar').style.width=Math.min(100,verseAn/plafond*100).toFixed(0)+'%';}
+  if(_el('p3aPlafondVerse'))  _el('p3aPlafondVerse').textContent=`Versé : CHF ${fmt(verseAn)}`;
+  if(_el('p3aPlafondMax'))    _el('p3aPlafondMax').textContent=`Plafond : CHF ${fmt(plafond)}`;
+
+  // ── LINE CHART — calcul mensuel réel ──
+  const ps = p3aPeriodStart(p3aPeriod);
+  const allDates = data3A.map(d=>d.date).sort();
+  const firstDate = allDates[0] || new Date().toISOString().slice(0,10);
+  const lineStart = ps ? (ps.slice(0,7) > firstDate.slice(0,7) ? ps.slice(0,7) : firstDate.slice(0,7))
+                       : firstDate.slice(0,7);
+  const lineEnd = new Date().toISOString().slice(0,7);
+  const months = p3aMonthRange(lineStart, lineEnd);
+
+  const monthlyVals = months.map(m => {
+    const sqM  = p3aCalcSQ(sqAll.filter(d=>d.date.slice(0,7)<=m));
+    const mobM = p3aCalcMob(mobAll.filter(d=>d.date.slice(0,7)<=m));
+    // Valeur SQ : utilise le dernier prixUnit connu jusqu'à ce mois
+    const lastPx = sqAll.filter(d=>d.type==='investissement'&&d.date.slice(0,7)<=m).pop()?.prixUnit || 0;
+    const sqV = Math.round((sqM.parts*lastPx + sqM.cash)*100)/100;
+    // Valeur MOB : versements - frais + intérêts - retraits
+    const mobV = Math.max(0, Math.round((mobM.versements-mobM.frais+mobM.interets-mobM.retrait)*100)/100);
+    const val = isSQ ? sqV : isMob ? mobV : sqV + mobV;
+    return { label: new Date(m+'-01T00:00:00').toLocaleDateString('fr-CH',{month:'short',year:'2-digit'}), val };
+  });
+
+  const lineCtx = document.getElementById('p3aLineChart').getContext('2d');
+  const gLine = lineCtx.createLinearGradient(0,0,0,110);
+  gLine.addColorStop(0,'rgba(251,146,60,.18)'); gLine.addColorStop(1,'rgba(251,146,60,0)');
+  if(p3aLineC) p3aLineC.destroy();
+  p3aLineC = new Chart(lineCtx,{
+    type:'line',
+    data:{ labels:monthlyVals.map(d=>d.label), datasets:[{data:monthlyVals.map(d=>d.val), borderColor:'#fb923c', borderWidth:2, fill:true, backgroundColor:gLine, tension:.4, pointRadius:0, pointHoverRadius:5, pointHoverBackgroundColor:'#fb923c', pointHoverBorderColor:'#fff', pointHoverBorderWidth:2}]},
+    options:{ responsive:true, maintainAspectRatio:false, animation:{duration:550,easing:'easeOutCubic'}, interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},tooltip:{backgroundColor:'#1a1a25',borderColor:'#3a3a50',borderWidth:1,titleColor:'#fb923c',bodyColor:'#e2e2ec',titleFont:{family:'Roboto',size:11,weight:'600'},bodyFont:{family:'DM Mono',size:12},padding:10,displayColors:false,callbacks:{title:i=>i[0].label,label:i=>'CHF '+fmt(i.raw)}}},
+      scales:{x:{display:false},y:{display:false,grace:'5%'}} }
+  });
+  const axEl=document.getElementById('p3aAxisRow');
+  if(axEl&&monthlyVals.length>1){
+    const n=Math.min(6,monthlyVals.length);
+    const idxs=Array.from({length:n},(_,i)=>Math.round(i*(monthlyVals.length-1)/(n-1)));
+    axEl.innerHTML=idxs.map(i=>`<span style="left:${(i/(monthlyVals.length-1)*100).toFixed(1)}%">${monthlyVals[i].label}</span>`).join('');
+  }
+
+  // ── AREA CHART (capital cumulé) ──
+  const areaData = months.map(m => {
+    const sqM=p3aCalcSQ(sqAll.filter(d=>d.date.slice(0,7)<=m));
+    const mobM=p3aCalcMob(mobAll.filter(d=>d.date.slice(0,7)<=m));
+    const val = isSQ ? sqM.versements : isMob ? mobM.versements : sqM.versements+mobM.versements;
+    return {label:new Date(m+'-01T00:00:00').toLocaleDateString('fr-CH',{month:'short',year:'2-digit'}), val};
+  });
+  const aCtx=document.getElementById('p3aAreaChart').getContext('2d');
+  const gV=aCtx.createLinearGradient(0,0,0,160); gV.addColorStop(0,'rgba(251,146,60,.92)'); gV.addColorStop(1,'rgba(251,146,60,.4)');
+  if(p3aAreaC) p3aAreaC.destroy();
+  p3aAreaC=new Chart(aCtx,{type:'bar',data:{labels:areaData.map(d=>d.label),datasets:[{label:'Capital',data:areaData.map(d=>d.val),backgroundColor:gV,borderRadius:{topLeft:3,topRight:3},stack:'s',borderSkipped:'bottom'}]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:700,easing:'easeOutQuart'},interaction:{intersect:false,mode:'index'},plugins:{legend:{display:false},tooltip:{backgroundColor:'#1a1a25',borderColor:'#3a3a50',borderWidth:1,titleColor:'#fb923c',bodyColor:'#e2e2ec',titleFont:{family:'Roboto',size:11},bodyFont:{family:'DM Mono',size:12},padding:10,displayColors:false,callbacks:{title:i=>i[0].label,label:i=>'CHF '+fmt(i.raw)}}},scales:{x:{stacked:true,grid:{display:false},ticks:{color:C.muted,font:{family:'DM Mono',size:8},maxTicksLimit:8},border:{display:false}},y:{stacked:true,grid:{color:'rgba(255,255,255,.04)'},ticks:{color:C.muted,font:{family:'DM Mono',size:9},callback:v=>`${(v/1000).toFixed(0)}k`,maxTicksLimit:5},border:{display:false}}},barThickness:areaData.length>18?7:13}});
+
+  // ── BAR CHART versements (MOB/consolidé) ou PERF (SQ) ──
+  const filData = data3A.filter(d=>(d.pilier||'swissquote')===(isSQ?'swissquote':'mobiliere')||(p3aPilier==='all'))
+    .filter(d=>!ps||d.date>=ps).sort((a,b)=>a.date.localeCompare(b.date));
+
+  if (!isSQ) {
+    const bCtx=document.getElementById('p3aBarChart').getContext('2d');
+    const gBV=bCtx.createLinearGradient(0,0,0,140); gBV.addColorStop(0,'rgba(52,211,153,.9)'); gBV.addColorStop(1,'rgba(52,211,153,.3)');
+    if(p3aBarC) p3aBarC.destroy();
+    p3aBarC=new Chart(bCtx,{type:'bar',data:{labels:filData.map(d=>fmtDate(d.date)),datasets:[{label:'Versement',data:filData.map(d=>d.versement||0),backgroundColor:gBV,borderRadius:3,borderSkipped:'bottom'}]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:600},interaction:{intersect:false,mode:'index'},plugins:{legend:{display:false},tooltip:{backgroundColor:'#1a1a25',borderColor:'#3a3a50',borderWidth:1,titleColor:'#fb923c',bodyColor:'#e2e2ec',padding:10,displayColors:false,callbacks:{title:i=>i[0].label,label:i=>'CHF '+fmt(i.raw)}}},scales:{x:{grid:{display:false},ticks:{color:C.muted,font:{family:'DM Mono',size:8},maxTicksLimit:8},border:{display:false}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:C.muted,font:{family:'DM Mono',size:9},maxTicksLimit:4},border:{display:false}}},barThickness:filData.length>18?7:13}});
+  }
+
+  // Perf SQ : ligne verte/rouge depuis le premier investissement
+  if (isSQ) {
+    const invEvents = sqAll.filter(d=>d.type==='investissement').sort((a,b)=>a.date.localeCompare(b.date));
+    if (invEvents.length) {
+      const perfMonths = months.filter(m=>m>=invEvents[0].date.slice(0,7));
+      const perfData = perfMonths.map(m=>{
+        const sqM=p3aCalcSQ(sqAll.filter(d=>d.date.slice(0,7)<=m));
+        const lastPx=sqAll.filter(d=>d.type==='investissement'&&d.date.slice(0,7)<=m).pop()?.prixUnit||0;
+        const valParts=Math.round(sqM.parts*lastPx*100)/100;
+        const perf=Math.round((valParts+sqM.cash+sqM.dividendes-sqM.versements)*100)/100;
+        return {label:new Date(m+'-01T00:00:00').toLocaleDateString('fr-CH',{month:'short',year:'2-digit'}), perf};
+      });
+      const pCtx=document.getElementById('p3aPerfChart').getContext('2d');
+      const vals=perfData.map(d=>d.perf);
+      const isPos=(vals[vals.length-1]||0)>=0;
+      const gP=pCtx.createLinearGradient(0,0,0,140);
+      gP.addColorStop(0,isPos?'rgba(52,211,153,.22)':'rgba(248,113,113,.22)');
+      gP.addColorStop(1,isPos?'rgba(52,211,153,0)':'rgba(248,113,113,0)');
+      if(p3aPerfC) p3aPerfC.destroy();
+      p3aPerfC=new Chart(pCtx,{type:'line',data:{labels:perfData.map(d=>d.label),datasets:[{data:vals,borderWidth:1.5,fill:true,backgroundColor:gP,tension:0.3,pointRadius:0,pointHoverRadius:4,pointHoverBorderColor:'#fff',pointHoverBorderWidth:2,segment:{borderColor:ctx=>vals[ctx.p1DataIndex]>=0?'#34d399':'#f87171'}}]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:600},interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{backgroundColor:'#1a1a25',borderColor:'#3a3a50',borderWidth:1,titleFont:{family:'Roboto',size:10},bodyFont:{family:'DM Mono',size:11},padding:10,displayColors:false,callbacks:{title:i=>i[0].label,label:i=>{const v=i.raw;return (v>=0?'▲ +CHF ':'▼ -CHF ')+fmt(Math.abs(v));}}}},scales:{x:{display:false},y:{grid:{color:'rgba(255,255,255,.04)'},border:{display:false},ticks:{color:C.muted,font:{family:'DM Mono',size:9},callback:v=>(v>=0?'+':'')+fmt(v)}}}}});
+    }
+  }
+}
+
+function lppCalcTotal(epargne, interets, rachat, retrait, date, excludeDate=null) {
+  const existing = [...lppData].filter(d => d.date && d.total > 0 && d.date < date && d.date !== excludeDate)
+                               .sort((a,b) => a.date.localeCompare(b.date));
+  const prev = existing[existing.length - 1];
+  const base = prev ? prev.total : 0;
+  return Math.round((base + epargne + interets + rachat - retrait) * 100) / 100;
+}
+
+function recalcLppTotals(data) {
+  // Recalcule tous les totaux en cascade après tri chronologique
+  const sorted = [...data].sort((a,b) => a.date.localeCompare(b.date));
+  if (!sorted.length) return sorted;
+  let running = sorted[0].total || 0;
+  return sorted.map((d, i) => {
+    if (i === 0) return { ...d, total: running };
+    running = Math.round((running + (d.epargne||0) + (d.interets||0) + (d.rachat||0) - (d.retrait||0)) * 100) / 100;
+    return { ...d, total: running };
+  });
+}
+
+function updateLppTotalPreview() {
+  const epargne = parseFloat(document.getElementById('lppFormEpargne').value) || 0;
+  const interets= parseFloat(document.getElementById('lppFormInterets').value) || 0;
+  const rachat  = parseFloat(document.getElementById('lppFormRachat').value) || 0;
+  const retrait = parseFloat(document.getElementById('lppFormRetrait').value) || 0;
+  const preview = document.getElementById('lppFormTotalPreview');
+  const baseEl  = document.getElementById('lppFormTotalBase');
+  if (!preview) return;
+  // Base = dernier total connu (peu importe la date saisie)
+  const last = [...lppData].filter(d => d.total > 0).sort((a,b) => a.date.localeCompare(b.date)).pop();
+  const base = last ? last.total : 0;
+  const total = Math.round((base + epargne + interets + rachat - retrait) * 100) / 100;
+  preview.textContent = fmt(total);
+  if (baseEl) baseEl.textContent = last ? `Base: CHF ${fmt(base)} (${new Date(last.date).toLocaleDateString('fr-CH',{month:'short',year:'numeric'})})` : 'Base: 0';
+}
+
+function openLppModal(editDate) {
+  lppEditDate = editDate || null;
+  document.getElementById('lppModalTitle').textContent = editDate ? 'Modifier entrée LPP' : 'Nouvelle entrée LPP';
+  if (editDate) {
+    const entry = lppData.find(d => d.date === editDate);
+    if (entry) {
+      document.getElementById('lppFormDate').value     = entry.date;
+      document.getElementById('lppFormEpargne').value  = entry.epargne || '';
+      document.getElementById('lppFormInterets').value = entry.interets || '';
+      document.getElementById('lppFormRachat').value   = entry.rachat || '';
+      document.getElementById('lppFormRetrait').value  = entry.retrait || '';
+      updateLppTotalPreview();
+    }
+  } else {
+    ['lppFormDate','lppFormEpargne','lppFormInterets','lppFormRachat','lppFormRetrait'].forEach(id => document.getElementById(id).value = '');
+    const t = new Date();
+    document.getElementById('lppFormDate').value = `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
+    updateLppTotalPreview();
+  }
+  document.getElementById('lppModal').classList.add('open');
+}
+
+function saveLppEntry() {
+  const date    = document.getElementById('lppFormDate').value;
+  const epargne = parseFloat(document.getElementById('lppFormEpargne').value) || 0;
+  const interets= parseFloat(document.getElementById('lppFormInterets').value) || 0;
+  const rachat  = parseFloat(document.getElementById('lppFormRachat').value) || 0;
+  const retrait = parseFloat(document.getElementById('lppFormRetrait').value) || 0;
+  if (!date) { alert('Date obligatoire'); return; }
+  const total = lppCalcTotal(epargne, interets, rachat, retrait, date);
+
+  // Work directly with lppData (source of truth)
+  const existing = [...lppData];
+  // If editing, remove old entry first
+  const filtered = lppEditDate ? existing.filter(d => d.date !== lppEditDate) : existing;
+  const idx = filtered.findIndex(d => d.date === date);
+  const entry = { date, epargne, interets, rachat, retrait, total };
+  if (idx >= 0) filtered[idx] = entry; else filtered.push(entry);
+  const recalculated = recalcLppTotals(filtered);
+  lppData = recalculated;
+  lsSave('lpp', recalculated);
+  closeModal('lppModal');
+  driveSaveAll();
+  renderLpp();
+  renderLppTxList();
+}
+
+function deleteLppEntry(date) {
+  if (!confirm('Supprimer cette entrée ?')) return;
+  const recalculated = recalcLppTotals(lppData.filter(d => d.date !== date));
+  lppData = recalculated;
+  lsSave('lpp', recalculated);
+  driveSaveAll();
+  renderLpp();
+  renderLppTxList();
+}
+
+function renderLppDataList() {
+  // kept for compatibility, calls renderLppTxList
+  renderLppTxList();
+}
+
+function renderLppTxList() {
+  const el = document.getElementById('lppTxList');
+  if (!el) return;
+  // Always use lppData (in-memory source of truth, synced with Drive)
+  const data = [...lppData].filter(d => d.date).sort((a,b) => b.date.localeCompare(a.date));
+  if (!data.length) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:12px;text-align:center;padding:20px">Aucune transaction — appuie sur + pour ajouter</div>';
+    return;
+  }
+  el.innerHTML = data.map(d => `
+    <div class="tx-row" style="cursor:pointer;padding:14px 4px" onclick="showLppEdit('${d.date}')">
+      <div style="flex:1">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:2px">${new Date(d.date).toLocaleDateString('fr-CH',{month:'long',year:'numeric'})}</div>
+        <div style="font-size:15px;font-weight:600">CHF ${fmt(d.total)}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px">
+          ${[d.epargne?'Ép. '+fmt(d.epargne):'', d.interets?'Int. '+fmt(d.interets):'', d.rachat?'Rachat '+fmt(d.rachat):'', d.retrait?'Retrait '+fmt(d.retrait):''].filter(Boolean).join(' · ')}
+        </div>
+      </div>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>`).join('');
+}
+
+let lppEditOrigDate = null;
+
+function showLppEdit(date) {
+  lppEditOrigDate = date;
+  const entry = lppData.find(d => d.date === date);
+  if (!entry) return;
+  document.getElementById('lppEditTitle').textContent = new Date(date).toLocaleDateString('fr-CH',{month:'long',year:'numeric'});
+  document.getElementById('lppEditDate').value     = entry.date;
+  document.getElementById('lppEditEpargne').value  = entry.epargne || '';
+  document.getElementById('lppEditInterets').value = entry.interets || '';
+  document.getElementById('lppEditRachat').value   = entry.rachat || '';
+  document.getElementById('lppEditRetrait').value  = entry.retrait || '';
+  updateLppEditPreview();
+  showPage('lppEdit');
+}
+
+function updateLppEditPreview() {
+  const date    = document.getElementById('lppEditDate').value;
+  const epargne = parseFloat(document.getElementById('lppEditEpargne').value) || 0;
+  const interets= parseFloat(document.getElementById('lppEditInterets').value) || 0;
+  const rachat  = parseFloat(document.getElementById('lppEditRachat').value) || 0;
+  const retrait = parseFloat(document.getElementById('lppEditRetrait').value) || 0;
+  if (!date) return;
+  // Exclude current entry from base calculation
+  const others = lppData.filter(d => d.date !== lppEditOrigDate && d.date < date && d.total > 0).sort((a,b)=>a.date.localeCompare(b.date));
+  const prev = others[others.length-1];
+  const base = prev ? prev.total : 0;
+  const total = Math.round((base + epargne + interets + rachat - retrait)*100)/100;
+  document.getElementById('lppEditTotalPreview').textContent = fmt(total);
+  document.getElementById('lppEditBase').textContent = prev ? `Base: CHF ${fmt(prev.total)} (${new Date(prev.date).toLocaleDateString('fr-CH',{month:'short',year:'numeric'})})` : 'Base: 0 (premier mois)';
+}
+
+function saveLppEdit() {
+  const date    = document.getElementById('lppEditDate').value;
+  const epargne = parseFloat(document.getElementById('lppEditEpargne').value) || 0;
+  const interets= parseFloat(document.getElementById('lppEditInterets').value) || 0;
+  const rachat  = parseFloat(document.getElementById('lppEditRachat').value) || 0;
+  const retrait = parseFloat(document.getElementById('lppEditRetrait').value) || 0;
+  if (!date) return;
+  const others = lppData.filter(d => d.date !== lppEditOrigDate && d.date < date && d.total > 0).sort((a,b)=>a.date.localeCompare(b.date));
+  const prev = others[others.length-1];
+  const total = Math.round(((prev?prev.total:0) + epargne + interets + rachat - retrait)*100)/100;
+  const entry = { date, epargne, interets, rachat, retrait, total };
+  let updated = lppData.filter(d => d.date !== lppEditOrigDate);
+  const idx = updated.findIndex(d => d.date === date);
+  if (idx >= 0) updated[idx] = entry; else updated.push(entry);
+  const recalculated = recalcLppTotals(updated);
+  lppData = recalculated;
+  lsSave('lpp', recalculated);
+  driveSaveAll();
+  renderLpp();
+  renderLppTxList();
+  showPage('lppTransactions');
+}
+
+function confirmDeleteLpp() {
+  if (!confirm('Supprimer cette entrée ?')) return;
+  lppData = lppData.filter(d => d.date !== lppEditOrigDate);
+  lsSave('lpp', lppData);
+  driveSaveAll();
+  renderLpp();
+  renderLppTxList();
+  showPage('lppTransactions');
+}
+
+// ── 3A CRUD ──
+
+
+
+
+
+// ── Segmented control helper ──
+
+
+
+// ── Affiche/masque les champs selon type sélectionné ──
+
+
+// ── Preview montant ──
+
+
+// ── Switch pilier dans l'onglet ──
+
+
+// ── Calcul portefeuille Swissquote (parts × prix courant) ──
+
+
+// ── Filtrer data3A par pilier ──
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function logOut() {
+  if (!confirm('Se déconnecter ?')) return;
+  clearToken();
+  driveFileId = null;
+  updateDriveBtn(false);
+  showLoginPage();
+}
+
+
+
+// ════════════════════════════════════════
+//  INVESTISSEMENTS
+// ════════════════════════════════════════
+// Taux de change approximatifs (USD→CHF) — mise à jour via Yahoo Finance
+const FX = { CHF: 1, USD: 0.90, EUR: 0.95 };
+
+// Prix actuels fetché via Yahoo Finance
+const livePrice = {};
+
+
+
+
+
+
+
+
+
+// ════════════════════════════════════════
+//  GOOGLE DRIVE SYNC
+// ════════════════════════════════════════
+const GDRIVE_CLIENT_ID = '870125849413-q1t7cij1t0ccojbjanlgek3kldfis51v.apps.googleusercontent.com'; // ← à remplir après config OAuth
+const GDRIVE_SCOPES    = 'https://www.googleapis.com/auth/drive.appdata';
+const GDRIVE_FILENAME  = 'finances_vf.json';
+let driveAccessToken   = null;
+let driveFileId        = null;
+
+// Structure par défaut du fichier Drive
+const DEFAULT_DATA = {
+  lpp:     [],
+  salaires:[],
+  depenses:[],
+  p3a:     [],
+  invest:  [],
+  meta:    { version:1, updatedAt: null }
+};
+
+// Token persisté dans localStorage avec expiry (55 min)
+function saveToken(token) {
+  driveAccessToken = token;
+  const expiry = Date.now() + 55 * 60 * 1000; // 55 min
+  localStorage.setItem('drive_token', token);
+  localStorage.setItem('drive_token_expiry', expiry);
+  // Schedule auto-refresh 5 min before expiry
+  setTimeout(() => silentRefresh(), 50 * 60 * 1000);
+}
+function loadToken() {
+  if (driveAccessToken) return driveAccessToken;
+  const token  = localStorage.getItem('drive_token');
+  const expiry = parseInt(localStorage.getItem('drive_token_expiry') || '0');
+  if (token && Date.now() < expiry) {
+    driveAccessToken = token;
+    return token;
+  }
+  // Token expired — clear it
+  localStorage.removeItem('drive_token');
+  localStorage.removeItem('drive_token_expiry');
+  return null;
+}
+function clearToken() {
+  driveAccessToken = null;
+  localStorage.removeItem('drive_token');
+  localStorage.removeItem('drive_token_expiry');
+}
+async function silentRefresh() {
+  if (!GDRIVE_CLIENT_ID) return;
+  try {
+    await new Promise((resolve, reject) => {
+      const client = google.accounts.oauth2.initTokenClient({
+        client_id: GDRIVE_CLIENT_ID,
+        scope: GDRIVE_SCOPES,
+        prompt: '',
+        callback: (resp) => {
+          if (resp.error) { reject(resp.error); return; }
+          saveToken(resp.access_token);
+          resolve();
+        }
+      });
+      client.requestAccessToken({ prompt: '' });
+    });
+    console.log('Token silently refreshed');
+  } catch(e) {
+    // Ne pas déconnecter l'utilisateur — le token actuel est peut-être encore valide
+    console.warn('Silent refresh failed (non-fatal):', e);
+  }
+}
+
+async function driveSignIn() {
+  if (!GDRIVE_CLIENT_ID) {
+    alert('Client ID Google non configuré.\nSuis les instructions dans le README pour configurer OAuth.');
+    return;
+  }
+  if (loadToken()) { driveSyncAll(); return; }
+  const client = google.accounts.oauth2.initTokenClient({
+    client_id: GDRIVE_CLIENT_ID,
+    scope: GDRIVE_SCOPES,
+    callback: async (resp) => {
+      if (resp.error) { console.error('OAuth error:', resp); return; }
+      saveToken(resp.access_token);
+      updateDriveBtn(true);
+      await driveSyncAll();
+    }
+  });
+  client.requestAccessToken();
+}
+
+function updateDriveBtn(connected, syncing) {
+  const btn = document.getElementById('driveBtn');
+  if (!btn) return;
+  if (syncing) {
+    btn.style.borderColor = '#fb923c';
+    btn.querySelector('svg').setAttribute('stroke','#fb923c');
+  } else if (connected) {
+    btn.style.borderColor = '#34d399';
+    btn.querySelector('svg').setAttribute('stroke','#34d399');
+  } else {
+    btn.style.borderColor = 'var(--border)';
+    btn.querySelector('svg').setAttribute('stroke','var(--muted)');
+  }
+  // Compat — si le label existe encore (ancienne version)
+  const label = document.getElementById('driveBtnLabel');
+  if (label) label.textContent = syncing ? '⏳' : connected ? '✓' : 'Drive';
+}
+
+async function driveRequest(method, url, body) {
+  const token = loadToken();
+  if (!token) throw new Error('Non connecté');
+  const opts = {
+    method,
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
+  };
+  if (body !== undefined) opts.body = typeof body === 'string' ? body : JSON.stringify(body);
+  const res = await fetch(url, opts);
+  if (res.status === 401) {
+    clearToken();
+    updateDriveBtn(false);
+    throw new Error('Token expiré — reconnecte-toi');
+  }
+  return res;
+}
+
+async function driveFindFile() {
+  const res  = await driveRequest('GET',
+    `https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=name='${GDRIVE_FILENAME}'&fields=files(id,name,modifiedTime)`);
+  const json = await res.json();
+  return json.files?.[0] || null;
+}
+
+async function driveReadFile(fileId) {
+  const res  = await driveRequest('GET',
+    `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`);
+  return await res.json();
+}
+
+async function driveWriteFile(data) {
+  data.meta = { version:1, updatedAt: new Date().toISOString() };
+  const content = JSON.stringify(data);
+  const boundary = '-------fin_boundary';
+  const mime = 'application/json';
+
+  if (!driveFileId) {
+    // Create new file
+    const meta = JSON.stringify({ name: GDRIVE_FILENAME, parents: ['appDataFolder'] });
+    const body = `--${boundary}\r\nContent-Type: application/json\r\n\r\n${meta}\r\n--${boundary}\r\nContent-Type: ${mime}\r\n\r\n${content}\r\n--${boundary}--`;
+    const res  = await driveRequest('POST',
+      `https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id`,
+      body);
+    const res2 = await fetch(`https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${loadToken()}`,
+        'Content-Type': `multipart/related; boundary="${boundary}"`
+      },
+      body
+    });
+    const json = await res2.json();
+    driveFileId = json.id;
+  } else {
+    // Update existing
+    await fetch(`https://www.googleapis.com/upload/drive/v3/files/${driveFileId}?uploadType=media`, {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${loadToken()}`,
+        'Content-Type': mime
+      },
+      body: content
+    });
+  }
+}
+
+// Main sync: read from Drive, populate app data
+async function driveSyncAll() {
+  updateDriveBtn(true, true);
+  const status = document.getElementById('globalStatus');
+  try {
+    const file = await driveFindFile();
+    if (file) {
+      // Fichier Drive trouvé → on lit
+      driveFileId = file.id;
+      const raw = await driveReadFile(file.id);
+      const driveData = { ...DEFAULT_DATA, ...raw };
+      const hasData = (driveData.lpp?.length || driveData.salaires?.length ||
+                       driveData.depenses?.length || driveData.p3a?.length ||
+                       driveData.invest?.length);
+      if (hasData) {
+        applyDriveData(driveData);
+        const ts = driveData.meta?.updatedAt
+          ? new Date(driveData.meta.updatedAt).toLocaleDateString('fr-CH')
+          : new Date().toLocaleDateString('fr-CH');
+        status.style.color = '#34d399';
+        status.textContent = `● Google Drive · ${ts}`;
+      } else {
+        // Drive vide → on y pousse les données locales
+        await driveSaveAll();
+        status.style.color = '#34d399';
+        status.textContent = `● Google Drive · ${new Date().toLocaleDateString('fr-CH')}`;
+      }
+    } else {
+      // Pas de fichier Drive → on le crée avec les données locales
+      await driveSaveAll();
+      status.style.color = '#34d399';
+      status.textContent = `● Google Drive · ${new Date().toLocaleDateString('fr-CH')}`;
+    }
+    updateDriveBtn(true, false);
+    refreshAllPages();
+  } catch(e) {
+    console.error('Drive sync error:', e);
+    updateDriveBtn(false);
+    status.style.color = '#f87171';
+    status.textContent = 'Erreur Drive: ' + e.message;
+  }
+}
+
+
+// Save all current app data back to Drive
+async function driveSaveAll() {
+  if (!loadToken()) return;
+  try {
+    const data = {
+      lpp: lppData.filter(d=>d.date && d.total > 0),
+      p3a: data3A,
+    };
+    await driveWriteFile(data);
+    const status = document.getElementById('globalStatus');
+    status.style.color = '#34d399';
+    status.textContent = `● Google Drive · ${new Date().toLocaleDateString('fr-CH')}`;
+  } catch(e) {
+    console.error('Drive save error:', e);
+    alert('Erreur sauvegarde Drive: ' + e.message);
+  }
+}
+
+function applyDriveData(d) {
+  if (Array.isArray(d.lpp))      lppData      = recalcLppTotals(d.lpp);
+
+  if (Array.isArray(d.p3a))      data3A       = recalcP3aTotals(d.p3a);
+
+}
+
+function refreshAllPages() {
+  const active = document.querySelector('.page.active')?.id?.replace('page-','');
+  if (active === 'lpp')  renderLpp();
+  if (active === '3a')   renderP3a();
+  renderLppDataList();
+}
+
+// ── Login page ──
+function showLoginPage() {
+  document.getElementById('loginPage').classList.add('visible');
+}
+function hideLoginPage() {
+  document.getElementById('loginPage').classList.remove('visible');
+}
+
+function waitForGSI(cb, tries=0) {
+  if (window.google?.accounts?.oauth2) { cb(); return; }
+  if (tries > 20) { alert('Librairie Google non chargée. Vérifie ta connexion internet.'); return; }
+  setTimeout(() => waitForGSI(cb, tries+1), 200);
+}
+
+async function loginWithGoogle() {
+  if (!GDRIVE_CLIENT_ID) {
+    alert('Client ID Google non configuré.');
+    return;
+  }
+  waitForGSI(() => {
+    const client = google.accounts.oauth2.initTokenClient({
+      client_id: GDRIVE_CLIENT_ID,
+      scope: GDRIVE_SCOPES,
+      callback: async (resp) => {
+        if (resp.error) { console.error('OAuth error:', resp); return; }
+        saveToken(resp.access_token);
+        hideLoginPage();
+        updateDriveBtn(true, true);
+        await driveSyncAll();
+      }
+    });
+    client.requestAccessToken({ prompt: 'select_account' });
+  });
+}
+
+function enterDemoMode() {
+  hideLoginPage();
+  lppData=[...DEMO_LPP]; data3A=[...DEMO_3A];
+  const status = document.getElementById('globalStatus');
+  status.style.color = '#5a5a72';
+  status.textContent = 'Mode démo';
+  updateDriveBtn(false);
+  renderLpp();
+}
+
+// Try reconnect on load
+function tryAutoConnect() {
+  if (!GDRIVE_CLIENT_ID) { showLoginPage(); return; }
+  waitForGSI(() => _doAutoConnect());
+}
+
+async function _doAutoConnect() {
+  // 1. Token valide en localStorage → reconnexion directe
+  if (loadToken()) {
+    hideLoginPage();
+    updateDriveBtn(true, true);
+    await driveSyncAll();
+    // Planifie le refresh 5 min avant expiry
+    const expiry = parseInt(localStorage.getItem('drive_token_expiry') || '0');
+    const remaining = expiry - Date.now() - 5 * 60 * 1000;
+    if (remaining > 0) setTimeout(() => silentRefresh(), remaining);
+    return;
+  }
+
+  // 2. Pas de token → essaie OAuth silencieux (sans prompt)
+  // Sur GitHub Pages, ça peut échouer — dans ce cas on montre la login page
+  // MAIS on attend un peu pour que Google GIS soit bien chargé
+  try {
+    await new Promise((resolve, reject) => {
+      const client = google.accounts.oauth2.initTokenClient({
+        client_id: GDRIVE_CLIENT_ID,
+        scope: GDRIVE_SCOPES,
+        prompt: '',
+        callback: (resp) => {
+          if (resp.error || !resp.access_token) { reject(resp.error || 'no_token'); return; }
+          saveToken(resp.access_token);
+          resolve();
+        }
+      });
+      client.requestAccessToken({ prompt: '' });
+    });
+    hideLoginPage();
+    updateDriveBtn(true, true);
+    await driveSyncAll();
+  } catch(e) {
+    // Silencieux échoue → montre la page de login normalement
+    console.log('Silent auth failed (normal):', e);
+    showLoginPage();
+    updateDriveBtn(false);
+  }
+}
+
+function init() {
+  // Date header
+  const _hDate = document.getElementById('globalStatus');
+  if (_hDate) {
+    const now = new Date();
+    const wd = now.toLocaleDateString('fr-CH',{weekday:'short'});
+    const dm = now.toLocaleDateString('fr-CH',{day:'numeric',month:'long'});
+    _hDate.textContent = wd+'. '+dm;
+  }
+  // Active LPP par défaut (gère les FABs + render)
+  showPage('lpp');
+  tryAutoConnect();
+}
+
+// Restore saved theme
+if (localStorage.getItem('theme') === 'light') {
+  document.body.classList.add('light');
+  document.getElementById('themeIcon').textContent = '🌙';
+}
+// Default transaction dates: last 30 days
+const _today = new Date();
+const _from  = new Date(); _from.setDate(_from.getDate()-30);
+const _fmt   = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+document.getElementById('txFromDate').value = _fmt(_from);
+document.getElementById('txToDate').value   = _fmt(_today);
+window.addEventListener('DOMContentLoaded', init);
+</script>
+
+</body>
+</html>
