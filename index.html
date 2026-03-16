@@ -1123,7 +1123,9 @@ async function fetchFundHistory(range = '5y') {
       .sort((a, b) => a[0].localeCompare(b[0]))
       .map(([d, p]) => ({ d, p }));
 
-    console.log(`UBS historique mis à jour: ${UBS_VITAINVEST_PRICES.length} prix (${data.from} → ${data.to})`);
+    // Vide le cache prix du jour pour forcer un refresh avec les nouvelles données
+    localStorage.removeItem(FUND_CACHE_KEY);
+    console.log(`UBS historique: ${UBS_VITAINVEST_PRICES.length} prix (${UBS_VITAINVEST_PRICES[0]?.d} → ${UBS_VITAINVEST_PRICES.at(-1)?.d})`);
     return data.prices.length;
   } catch(err) {
     console.warn('fetchFundHistory échoué:', err.message);
@@ -2108,6 +2110,12 @@ async function renderP3a() {
 
 function renderP3aInner() {
   if (!document.getElementById('p3aVal')) return;
+  // Si les prix ne sont pas encore chargés, affiche un indicateur de chargement
+  if (UBS_VITAINVEST_PRICES.length === 0) {
+    const axEl = document.getElementById('p3aAxisRow');
+    if (axEl) axEl.innerHTML = '<span style="left:50%;transform:translateX(-50%);color:var(--muted);font-size:10px">Chargement des prix...</span>';
+    return;
+  }
 
   const isSQ  = p3aPilier === 'swissquote';
   const isMob = p3aPilier === 'mobiliere';
@@ -2223,19 +2231,27 @@ function renderP3aInner() {
   const firstDate = allDates[0] || new Date().toISOString().slice(0,10);
   const lineStart = ps ? (ps.slice(0,7) > firstDate.slice(0,7) ? ps.slice(0,7) : firstDate.slice(0,7))
                        : firstDate.slice(0,7);
-  const lineEnd = new Date().toISOString().slice(0,7);
+  // lineEnd = mois du dernier prix disponible (pas forcément aujourd'hui si prix pas encore chargés)
+  const pricesLastDate = UBS_VITAINVEST_PRICES.at(-1)?.d;
+  const todayMonth = new Date().toISOString().slice(0,7);
+  const lineEnd = pricesLastDate ? pricesLastDate.slice(0,7) : todayMonth;
   const months = p3aMonthRange(lineStart, lineEnd);
+
+  // Date du dernier prix disponible (pour savoir jusqu'où tracer)
+  const latestPriceDate = UBS_VITAINVEST_PRICES.at(-1)?.d || new Date().toISOString().slice(0,10);
+  const latestPriceMonth = latestPriceDate.slice(0,7);
 
   const monthlyVals = months.map(m => {
     const sqM  = p3aCalcSQ(sqAll.filter(d=>d.date.slice(0,7)<=m));
     const mobM = p3aCalcMob(mobAll.filter(d=>d.date.slice(0,7)<=m));
-    // Prix du fond : CSV en priorité, sinon dernier prix d'investissement
+    // Prix du fond : cherche le dernier prix <= fin du mois
     const csvPx  = p3aGetPriceBefore(m+'-31');
     const lastPx = csvPx
       || sqAll.filter(d=>d.type==='investissement'&&d.date.slice(0,7)<=m).pop()?.prixUnit
-      || p3aGetPriceBefore(new Date().toISOString().slice(0,10))  // prix le plus récent disponible
       || 0;
-    const sqV = Math.round((sqM.parts*lastPx + sqM.cash)*100)/100;
+    const sqV = lastPx > 0
+      ? Math.round((sqM.parts*lastPx + sqM.cash)*100)/100
+      : Math.round(sqM.cash*100)/100; // si pas de prix, juste le cash
     // Valeur MOB : versements - frais + intérêts - retraits
     const mobV = Math.max(0, Math.round((mobM.versements-mobM.frais+mobM.interets-mobM.retrait)*100)/100);
     const val = isSQ ? sqV : isMob ? mobV : sqV + mobV;
