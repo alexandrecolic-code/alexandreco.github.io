@@ -1244,6 +1244,14 @@ const DEMO_3A = (() => {
     ['2025-04-01','swissquote','versement',600,0],
     ['2025-05-01','swissquote','versement',600,0],
     ['2025-06-01','swissquote','versement',600,28],  // dividendes juin
+    ['2025-07-01','swissquote','versement',600,0],
+    ['2025-08-01','swissquote','versement',600,0],
+    ['2025-09-01','swissquote','versement',600,0],
+    ['2025-10-01','swissquote','versement',600,0],
+    ['2025-11-01','swissquote','versement',600,0],
+    ['2025-12-01','swissquote','versement',600,35],  // dividendes déc
+    ['2026-01-01','swissquote','versement',600,0],
+    ['2026-02-01','swissquote','versement',600,0],
     ['2026-03-01','swissquote','versement',200,0],
   ];
   // Investissements SQ trimestriels (achat de parts)
@@ -1259,11 +1267,13 @@ const DEMO_3A = (() => {
   const mobVers = [
     ['2024-01-01','mobiliere','versement',1200,0,0,12.5],
     ['2024-07-01','mobiliere','versement',1200,0,0,0],
-    ['2024-12-31','mobiliere','versement',0,8.5,0,0],   // frais + intérêts
+    ['2024-12-31','mobiliere','versement',0,8.5,0,18.0],
     ['2025-01-01','mobiliere','versement',1200,0,0,15.2],
     ['2025-07-01','mobiliere','versement',1200,0,0,0],
-    ['2025-12-31','mobiliere','versement',0,9.0,0,0],
+    ['2025-12-31','mobiliere','versement',0,9.0,0,22.0],
     ['2026-01-01','mobiliere','versement',1200,0,0,0],
+    ['2026-02-01','mobiliere','versement',1200,0,0,0],
+    ['2026-03-01','mobiliere','versement',1200,0,0,0],
   ];
 
   sqVers.forEach(r => rows.push({
@@ -2231,15 +2241,9 @@ function renderP3aInner() {
   const firstDate = allDates[0] || new Date().toISOString().slice(0,10);
   const lineStart = ps ? (ps.slice(0,7) > firstDate.slice(0,7) ? ps.slice(0,7) : firstDate.slice(0,7))
                        : firstDate.slice(0,7);
-  // lineEnd = mois du dernier prix disponible (pas forcément aujourd'hui si prix pas encore chargés)
-  const pricesLastDate = UBS_VITAINVEST_PRICES.at(-1)?.d;
-  const todayMonth = new Date().toISOString().slice(0,7);
-  const lineEnd = pricesLastDate ? pricesLastDate.slice(0,7) : todayMonth;
+  // lineEnd = mois courant (toujours, indépendamment des prix disponibles)
+  const lineEnd = new Date().toISOString().slice(0,7); // ex: '2026-03'
   const months = p3aMonthRange(lineStart, lineEnd);
-
-  // Date du dernier prix disponible (pour savoir jusqu'où tracer)
-  const latestPriceDate = UBS_VITAINVEST_PRICES.at(-1)?.d || new Date().toISOString().slice(0,10);
-  const latestPriceMonth = latestPriceDate.slice(0,7);
 
   const monthlyVals = months.map(m => {
     const sqM  = p3aCalcSQ(sqAll.filter(d=>d.date.slice(0,7)<=m));
@@ -2249,9 +2253,9 @@ function renderP3aInner() {
     const lastPx = csvPx
       || sqAll.filter(d=>d.type==='investissement'&&d.date.slice(0,7)<=m).pop()?.prixUnit
       || 0;
-    const sqV = lastPx > 0
-      ? Math.round((sqM.parts*lastPx + sqM.cash)*100)/100
-      : Math.round(sqM.cash*100)/100; // si pas de prix, juste le cash
+    // Si pas de prix pour ce mois, utilise le dernier prix connu
+    const fallbackPx = lastPx > 0 ? lastPx : (p3aGetPriceBefore(new Date().toISOString().slice(0,10)) || 0);
+    const sqV = Math.round((sqM.parts * fallbackPx + sqM.cash) * 100) / 100;
     // Valeur MOB : versements - frais + intérêts - retraits
     const mobV = Math.max(0, Math.round((mobM.versements-mobM.frais+mobM.interets-mobM.retrait)*100)/100);
     const val = isSQ ? sqV : isMob ? mobV : sqV + mobV;
