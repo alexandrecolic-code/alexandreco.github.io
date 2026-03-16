@@ -2327,6 +2327,56 @@ function renderP3aInner() {
     };
   });
 
+  // ── LINE CHART — graphe principal "Solde actuel" ──
+  const lineCtx = document.getElementById('p3aLineChart').getContext('2d');
+  const gLine = lineCtx.createLinearGradient(0,0,0,110);
+  gLine.addColorStop(0,'rgba(251,146,60,.18)');
+  gLine.addColorStop(1,'rgba(251,146,60,0)');
+  if (p3aLineC) p3aLineC.destroy();
+  p3aLineC = new Chart(lineCtx, {
+    type: 'line',
+    data: {
+      labels: monthlyVals.map(d => d.label),
+      datasets: [{
+        data: monthlyVals.map(d => d.val),
+        borderColor: '#fb923c', borderWidth: 2,
+        fill: true, backgroundColor: gLine, tension: .4,
+        pointRadius: 0, pointHoverRadius: 5,
+        pointHoverBackgroundColor: '#fb923c',
+        pointHoverBorderColor: '#fff', pointHoverBorderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      animation: {duration: 550, easing: 'easeOutCubic'},
+      interaction: {mode: 'index', intersect: false},
+      plugins: {
+        legend: {display: false},
+        tooltip: {
+          backgroundColor: '#1a1a25', borderColor: '#3a3a50', borderWidth: 1,
+          titleColor: '#fb923c', bodyColor: '#e2e2ec',
+          titleFont: {family: 'Roboto', size: 11, weight: '600'},
+          bodyFont: {family: 'DM Mono', size: 12},
+          padding: 10, displayColors: false,
+          callbacks: {
+            title: i => i[0].label,
+            label: i => 'CHF ' + fmt(i.raw)
+          }
+        }
+      },
+      scales: {
+        x: {
+          display: true, grid: {display: false}, border: {display: false},
+          ticks: {color: C.muted, font: {family: 'DM Mono', size: 9}, maxTicksLimit: 6, maxRotation: 0}
+        },
+        y: {display: false, grace: '5%'}
+      }
+    }
+  });
+  const axEl = document.getElementById('p3aAxisRow');
+  if (axEl) axEl.innerHTML = '';
+
+
   // ── AREA CHART (capital cumulé) ──
   const areaData = months.map(m => {
     const sqM=p3aCalcSQ(sqAll.filter(d=>d.date.slice(0,7)<=m));
