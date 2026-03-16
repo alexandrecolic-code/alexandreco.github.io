@@ -2235,51 +2235,64 @@ function renderP3aInner() {
   if(_el('p3aPlafondVerse'))  _el('p3aPlafondVerse').textContent=`Versé : CHF ${fmt(verseAn)}`;
   if(_el('p3aPlafondMax'))    _el('p3aPlafondMax').textContent=`Plafond : CHF ${fmt(plafond)}`;
 
-  // ── LINE CHART — calcul mensuel réel ──
-  const ps = p3aPeriodStart(p3aPeriod);
-  const allDates = data3A.map(d=>d.date).sort();
-  const firstDate = allDates[0] || new Date().toISOString().slice(0,10);
-  const lineStart = ps ? (ps.slice(0,7) > firstDate.slice(0,7) ? ps.slice(0,7) : firstDate.slice(0,7))
-                       : firstDate.slice(0,7);
-  // lineEnd = mois courant (toujours, indépendamment des prix disponibles)
-  const lineEnd = new Date().toISOString().slice(0,7); // ex: '2026-03'
-  const months = p3aMonthRange(lineStart, lineEnd);
+  // ── LINE CHART — généré dynamiquement depuis les transactions ──
+  //
+  // Logique :
+  // 1. On prend le mois de la première transaction de data3A comme point de départ
+  // 2. On prend le mois de la DERNIÈRE transaction (pas new Date()) comme point d'arrivée
+  //    → ainsi, si une transaction mars 2026 existe, le graphe va jusqu'en mars 2026
+  //    → si une transaction avril 2026 est ajoutée, le graphe ira jusqu'en avril automatiquement
+  // 3. Le filtre temporel (YTD, 6m, etc.) restreint uniquement le début
+  // 4. Pour chaque mois, on calcule la valeur réelle : parts×prix + cash (SQ) ou versements nets (MOB)
 
+  // Détermine la plage de dates à partir des transactions réelles
+  const allTxDates  = data3A.map(d => d.date).sort();
+  const firstTxDate = allTxDates[0]  || new Date().toISOString().slice(0, 10);
+  const lastTxDate  = allTxDates[allTxDates.length - 1] || new Date().toISOString().slice(0, 10);
+
+  // Filtre temporel : restreint le début (mais jamais la fin)
+  const periodStartDate = p3aPeriodStart(p3aPeriod);
+  const chartStart = periodStartDate
+    ? (periodStartDate.slice(0, 7) > firstTxDate.slice(0, 7)
+        ? periodStartDate.slice(0, 7)
+        : firstTxDate.slice(0, 7))
+    : firstTxDate.slice(0, 7);
+
+  // La fin = mois courant (aujourd'hui), en heure locale pour éviter le décalage UTC
+  // Si on est en mars 2026, le graphe va jusqu'en mars même sans transaction en mars
+  // Un mois sans transaction = valeur identique au mois précédent (ligne horizontale)
+  const _now = new Date();
+  const chartEnd = `${_now.getFullYear()}-${String(_now.getMonth()+1).padStart(2,'0')}`;
+
+  // Génère la liste des mois [chartStart .. chartEnd]
+  const months = p3aMonthRange(chartStart, chartEnd);
+
+  // Pour chaque mois, calcule la valeur du portefeuille
   const monthlyVals = months.map(m => {
-    const sqM  = p3aCalcSQ(sqAll.filter(d=>d.date.slice(0,7)<=m));
-    const mobM = p3aCalcMob(mobAll.filter(d=>d.date.slice(0,7)<=m));
-    // Prix du fond : cherche le dernier prix <= fin du mois
-    const csvPx  = p3aGetPriceBefore(m+'-31');
-    const lastPx = csvPx
-      || sqAll.filter(d=>d.type==='investissement'&&d.date.slice(0,7)<=m).pop()?.prixUnit
-      || 0;
-    // Si pas de prix pour ce mois, utilise le dernier prix connu
-    const fallbackPx = lastPx > 0 ? lastPx : (p3aGetPriceBefore(new Date().toISOString().slice(0,10)) || 0);
-    const sqV = Math.round((sqM.parts * fallbackPx + sqM.cash) * 100) / 100;
-    // Valeur MOB : versements - frais + intérêts - retraits
-    const mobV = Math.max(0, Math.round((mobM.versements-mobM.frais+mobM.interets-mobM.retrait)*100)/100);
-    const val = isSQ ? sqV : isMob ? mobV : sqV + mobV;
-    return { label: new Date(m+'-01T00:00:00').toLocaleDateString('fr-CH',{month:'short',year:'2-digit'}), val };
-  });
+    // Cumul des transactions SQ et MOB jusqu'à ce mois inclus
+    const sqM  = p3aCalcSQ( sqAll.filter(d => d.date.slice(0, 7) <= m));
+    const mobM = p3aCalcMob(mobAll.filter(d => d.date.slice(0, 7) <= m));
 
-  const lineCtx = document.getElementById('p3aLineChart').getContext('2d');
-  const gLine = lineCtx.createLinearGradient(0,0,0,110);
-  gLine.addColorStop(0,'rgba(251,146,60,.18)'); gLine.addColorStop(1,'rgba(251,146,60,0)');
-  if(p3aLineC) p3aLineC.destroy();
-  p3aLineC = new Chart(lineCtx,{
-    type:'line',
-    data:{ labels:monthlyVals.map(d=>d.label), datasets:[{data:monthlyVals.map(d=>d.val), borderColor:'#fb923c', borderWidth:2, fill:true, backgroundColor:gLine, tension:.4, pointRadius:0, pointHoverRadius:5, pointHoverBackgroundColor:'#fb923c', pointHoverBorderColor:'#fff', pointHoverBorderWidth:2}]},
-    options:{ responsive:true, maintainAspectRatio:false, animation:{duration:550,easing:'easeOutCubic'}, interaction:{mode:'index',intersect:false},
-      plugins:{legend:{display:false},tooltip:{backgroundColor:'#1a1a25',borderColor:'#3a3a50',borderWidth:1,titleColor:'#fb923c',bodyColor:'#e2e2ec',titleFont:{family:'Roboto',size:11,weight:'600'},bodyFont:{family:'DM Mono',size:12},padding:10,displayColors:false,callbacks:{title:i=>i[0].label,label:i=>'CHF '+fmt(i.raw)}}},
-      scales:{
-        x:{ display:true, grid:{display:false}, border:{display:false},
-            ticks:{ color:C.muted, font:{family:'DM Mono',size:9}, maxTicksLimit:6, maxRotation:0 }},
-        y:{ display:false, grace:'5%' }
-      }
-    }
+    // Prix SQ : Yahoo Finance (via UBS_VITAINVEST_PRICES) en priorité,
+    // sinon dernier prix d'investissement connu
+    const csvPx    = p3aGetPriceBefore(m + '-31');
+    const invPx    = sqAll.filter(d => d.type === 'investissement' && d.date.slice(0, 7) <= m).pop()?.prixUnit;
+    const lastKnownPx = p3aGetPriceBefore(new Date().toISOString().slice(0, 10));
+    const px = csvPx || invPx || lastKnownPx || 0;
+
+    // Valeur SQ = parts × prix + cash non investi
+    const sqV  = Math.round((sqM.parts * px + sqM.cash) * 100) / 100;
+    // Valeur MOB = versements - frais + intérêts - retraits
+    const mobV = Math.max(0, Math.round((mobM.versements - mobM.frais + mobM.interets - mobM.retrait) * 100) / 100);
+
+    // Valeur affichée selon le pilier sélectionné
+    const val = isSQ ? sqV : isMob ? mobV : sqV + mobV;
+
+    return {
+      label: new Date(m + '-01T00:00:00').toLocaleDateString('fr-CH', {month: 'short', year: '2-digit'}),
+      val
+    };
   });
-  const axEl = document.getElementById('p3aAxisRow');
-  if (axEl) axEl.innerHTML = '';
 
   // ── AREA CHART (capital cumulé) ──
   const areaData = months.map(m => {
