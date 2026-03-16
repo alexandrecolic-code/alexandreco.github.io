@@ -2128,9 +2128,16 @@ function p3aPeriodStart(period) {
 
 // ── Génère mois YYYY-MM entre start et end ──
 function p3aMonthRange(start, end) {
-  const months=[]; let d=new Date(start+'-01T00:00:00');
-  const endD=new Date(end+'-01T00:00:00');
-  while(d<=endD){ months.push(d.toISOString().slice(0,7)); d.setMonth(d.getMonth()+1); }
+  // Utilise les méthodes locales (pas toISOString qui est UTC)
+  // pour éviter le bug de décalage horaire ex: 2026-03-01 00:00 UTC+1 = 2026-02-28 UTC
+  const months = [];
+  let y = parseInt(start.slice(0, 4)), m = parseInt(start.slice(5, 7));
+  const ey = parseInt(end.slice(0, 4)),  em = parseInt(end.slice(5, 7));
+  while (y < ey || (y === ey && m <= em)) {
+    months.push(`${y}-${String(m).padStart(2, '0')}`);
+    m++;
+    if (m > 12) { m = 1; y++; }
+  }
   return months;
 }
 
