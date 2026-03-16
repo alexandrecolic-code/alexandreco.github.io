@@ -1191,35 +1191,61 @@ const C = {
 // ════════════════════════════════════════
 //  DEMO DATA
 // ════════════════════════════════════════
-const DEMO_LPP = [
-  { date:'2023-12-01', epargne:0,       interets:0,     rachat:0, retrait:0,    total:48558 },
-  { date:'2024-01-01', epargne:1381.25, interets:50.63, rachat:0, retrait:0,    total:49989.88 },
-  { date:'2024-02-01', epargne:1381.25, interets:50.63, rachat:0, retrait:0,    total:51421.76 },
-  { date:'2024-03-01', epargne:1381.25, interets:50.63, rachat:0, retrait:0,    total:52853.64 },
-  { date:'2024-04-01', epargne:1381.25, interets:50.63, rachat:0, retrait:0,    total:54285.52 },
-  { date:'2024-05-01', epargne:1381.25, interets:50.63, rachat:0, retrait:0,    total:55717.40 },
-  { date:'2024-06-01', epargne:1381.25, interets:50.63, rachat:0, retrait:0,    total:57149.28 },
-  { date:'2024-07-01', epargne:1381.25, interets:50.63, rachat:0, retrait:0,    total:58581.16 },
-  { date:'2024-08-01', epargne:1381.25, interets:50.63, rachat:0, retrait:0,    total:60013.04 },
-  { date:'2024-09-01', epargne:1381.25, interets:50.63, rachat:0, retrait:0,    total:61444.92 },
-  { date:'2024-10-01', epargne:1381.25, interets:50.63, rachat:5000, retrait:0, total:67876.80 },
-  { date:'2024-11-01', epargne:1381.25, interets:50.63, rachat:0, retrait:0,    total:69308.68 },
-  { date:'2024-12-01', epargne:1381.25, interets:55.85, rachat:0, retrait:0,    total:70745.78 },
-  { date:'2025-01-01', epargne:1381.25, interets:74.80, rachat:0, retrait:0,    total:72201.83 },
-  { date:'2025-02-01', epargne:1381.25, interets:74.80, rachat:0, retrait:0,    total:73657.88 },
-  { date:'2025-03-01', epargne:1381.25, interets:74.80, rachat:0, retrait:0,    total:75113.93 },
-  { date:'2025-04-01', epargne:1491.65, interets:74.80, rachat:8000, retrait:0, total:84680.38 },
-  { date:'2025-05-01', epargne:1436.50, interets:74.80, rachat:0, retrait:0,    total:86191.68 },
-  { date:'2025-06-01', epargne:1436.50, interets:74.80, rachat:0, retrait:0,    total:87702.98 },
-  { date:'2025-07-01', epargne:1436.50, interets:74.80, rachat:0, retrait:0,    total:89214.28 },
-  { date:'2025-08-01', epargne:1436.50, interets:74.80, rachat:0, retrait:0,    total:90725.58 },
-  { date:'2025-09-01', epargne:1436.50, interets:74.80, rachat:0, retrait:0,    total:92236.88 },
-  { date:'2025-10-01', epargne:1436.50, interets:74.80, rachat:0, retrait:0,    total:93748.18 },
-  { date:'2025-11-01', epargne:1436.50, interets:74.80, rachat:0, retrait:0,    total:95259.48 },
-  { date:'2025-12-01', epargne:1436.50, interets:74.80, rachat:0, retrait:67000, total:29770.78 },
-  { date:'2026-01-01', epargne:1386.50, interets:25.10, rachat:0, retrait:0,    total:31182.38 },
-  { date:'2026-02-01', epargne:1436.50, interets:25.10, rachat:0, retrait:0,    total:32643.98 },
-];
+const DEMO_LPP = (() => {
+  // Données de base jusqu'à fév 2026
+  const base = [
+  { date:'2023-12-01', epargne:0,       interets:0,     rachat:0, retrait:0,    total:45000    },
+  { date:'2024-01-01', epargne:1436.50, interets:37.50, rachat:0, retrait:0,    total:46474    },
+  { date:'2024-02-01', epargne:1436.50, interets:38.73, rachat:0, retrait:0,    total:47949.23 },
+  { date:'2024-03-01', epargne:1436.50, interets:39.96, rachat:0, retrait:0,    total:49425.69 },
+  { date:'2024-04-01', epargne:1436.50, interets:41.19, rachat:0, retrait:0,    total:50903.38 },
+  { date:'2024-05-01', epargne:1436.50, interets:42.42, rachat:0, retrait:0,    total:52382.30 },
+  { date:'2024-06-01', epargne:1436.50, interets:43.65, rachat:0, retrait:0,    total:53862.45 },
+  { date:'2024-07-01', epargne:1436.50, interets:44.89, rachat:0, retrait:0,    total:55343.84 },
+  { date:'2024-08-01', epargne:1436.50, interets:46.12, rachat:0, retrait:0,    total:56826.46 },
+  { date:'2024-09-01', epargne:1436.50, interets:47.36, rachat:0, retrait:0,    total:58310.32 },
+  { date:'2024-10-01', epargne:1436.50, interets:48.59, rachat:0, retrait:0,    total:59795.41 },
+  { date:'2024-11-01', epargne:1436.50, interets:49.83, rachat:0, retrait:0,    total:61281.74 },
+  { date:'2024-12-01', epargne:1436.50, interets:51.07, rachat:20000, retrait:0, total:82769.31},
+  { date:'2025-01-01', epargne:1436.50, interets:68.97, rachat:0, retrait:0,    total:84274.78 },
+  { date:'2025-02-01', epargne:1436.50, interets:70.23, rachat:0, retrait:0,    total:85781.51 },
+  { date:'2025-03-01', epargne:1436.50, interets:71.48, rachat:0, retrait:0,    total:87289.49 },
+  { date:'2025-04-01', epargne:1436.50, interets:72.74, rachat:0, retrait:0,    total:88798.73 },
+  { date:'2025-05-01', epargne:1436.50, interets:74.00, rachat:0, retrait:0,    total:90309.23 },
+  { date:'2025-06-01', epargne:1436.50, interets:74.80, rachat:0, retrait:0,    total:91820.53 },
+  { date:'2025-07-01', epargne:1436.50, interets:74.80, rachat:0, retrait:0,    total:93331.83 },
+  { date:'2025-08-01', epargne:1436.50, interets:74.80, rachat:0, retrait:0,    total:94843.13 },
+  { date:'2025-09-01', epargne:1436.50, interets:74.80, rachat:0, retrait:0,    total:96354.43 },
+  { date:'2025-10-01', epargne:1436.50, interets:74.80, rachat:0, retrait:0,    total:97865.73 },
+  { date:'2025-11-01', epargne:1436.50, interets:74.80, rachat:0, retrait:67000, total:32377.03},
+  { date:'2025-12-01', epargne:1386.50, interets:26.98, rachat:0, retrait:0,    total:33790.51 },
+  { date:'2026-01-01', epargne:1386.50, interets:25.10, rachat:0, retrait:0,    total:35202.11 },
+  { date:'2026-02-01', epargne:1436.50, interets:25.10, rachat:0, retrait:0,    total:36663.71 },
+  ];
+
+  // Étend automatiquement jusqu'au mois courant (en heure locale)
+  const now    = new Date();
+  const curY   = now.getFullYear();
+  const curM   = now.getMonth() + 1; // 1-12
+  const last   = base[base.length - 1];
+  let lastDate = new Date(last.date + 'T00:00:00');
+  let running  = last.total;
+
+  // Ajoute un mois à la fois jusqu'au mois courant
+  while (true) {
+    lastDate.setMonth(lastDate.getMonth() + 1);
+    const y = lastDate.getFullYear();
+    const m = lastDate.getMonth() + 1;
+    if (y > curY || (y === curY && m > curM)) break;
+    const epargne  = 1436.50;
+    const interets = Math.round(running * (0.015 / 12) * 100) / 100;
+    running = Math.round((running + epargne + interets) * 100) / 100;
+    const dateStr = `${y}-${String(m).padStart(2,'0')}-01`;
+    base.push({ date: dateStr, epargne, interets, rachat: 0, retrait: 0, total: running });
+  }
+
+  return base;
+})();
 
 // Demo 3A — versements 600/mois, rendement ~6%/an, retrait partiel dec 2025
 const DEMO_3A = (() => {
@@ -2308,7 +2334,7 @@ function renderP3aInner() {
 
   // ── BAR CHART versements (MOB/consolidé) ou PERF (SQ) ──
   const filData = data3A.filter(d=>(d.pilier||'swissquote')===(isSQ?'swissquote':'mobiliere')||(p3aPilier==='all'))
-    .filter(d=>!ps||d.date>=ps).sort((a,b)=>a.date.localeCompare(b.date));
+    .filter(d=>!periodStartDate||d.date>=periodStartDate).sort((a,b)=>a.date.localeCompare(b.date));
 
   if (!isSQ) {
     const bCtx=document.getElementById('p3aBarChart').getContext('2d');
@@ -2345,10 +2371,9 @@ function renderP3aInner() {
       const firstTxDate = sqSorted.find(d=>d.type==='investissement')?.date;
       if (!firstTxDate) { if(p3aPerfC){p3aPerfC.destroy();p3aPerfC=null;} return; }
 
-      const periodStartStr = p3aPeriodStart(p3aPeriod);
-      // Prend le max entre début de période et date du premier invest
-      const chartFromDate = periodStartStr && periodStartStr > firstTxDate
-        ? periodStartStr : firstTxDate;
+            // Prend le max entre début de période et date du premier invest
+      const chartFromDate = periodStartDate && periodStartDate > firstTxDate
+        ? periodStartDate : firstTxDate;
 
       const today = new Date().toISOString().slice(0,10);
       const pricesInRange = UBS_VITAINVEST_PRICES.filter(p => p.d >= chartFromDate && p.d <= today);
