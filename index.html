@@ -2093,13 +2093,6 @@ function p3aMonthRange(start, end) {
 // ── RENDER PRINCIPAL ──
 async function renderP3a() {
   if (!document.getElementById('p3aVal')) return;
-  // Charge les prix si pas encore disponibles
-  if (UBS_VITAINVEST_PRICES.length === 0) {
-    await fetchUBSHistory('5y');
-  } else {
-    // Refresh prix du jour en arrière-plan
-    fetchUBSCurrentPrice().then(r => { if (r) renderP3aInner(); });
-  }
   renderP3aInner();
 }
 
@@ -2924,14 +2917,8 @@ function init() {
   const _ht = document.getElementById('headerTitle');
   if (_ht) _ht.textContent = 'Caisse de pension';
   // Connexion Drive (appellera refreshAllPages → renderLpp une fois les données chargées)
-  // Mise à jour automatique du prix du fonds au démarrage
-  // (nécessite GAS_PROXY_URL configuré — sans impact si non configuré)
+  // Mise à jour automatique du prix du fonds (GAS proxy si configuré)
   updateFundPrice();
-  if (GAS_PROXY_URL) {
-    fetchFundHistory('5y').then(n => {
-      if (n > 0 && document.querySelector('.page.active')?.id === 'page-3a') renderP3aInner();
-    });
-  }
   tryAutoConnect();
 }
 
