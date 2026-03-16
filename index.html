@@ -2274,15 +2274,70 @@ function renderP3aInner() {
   if (isSQ) {
     const invEvents = sqAll.filter(d=>d.type==='investissement').sort((a,b)=>a.date.localeCompare(b.date));
     if (invEvents.length) {
-      const perfMonths = months.filter(m=>m>=invEvents[0].date.slice(0,7));
-      const perfData = perfMonths.map(m=>{
-        const sqM=p3aCalcSQ(sqAll.filter(d=>d.date.slice(0,7)<=m));
-        const csvPx2 = p3aGetPriceBefore(m+'-31');
-        const lastPx = csvPx2 || sqAll.filter(d=>d.type==='investissement'&&d.date.slice(0,7)<=m).pop()?.prixUnit||0;
-        const valParts = Math.round(sqM.parts*lastPx*100)/100;
-        const perf = Math.round((valParts+sqM.cash+sqM.dividendes-sqM.versements)*100)/100;
-        const pct  = sqM.versements > 0 ? (perf/sqM.versements*100).toFixed(1) : '0.0';
-        return {label:new Date(m+'-01T00:00:00').toLocaleDateString('fr-CH',{month:'short',year:'2-digit'}), perf, pct, px:lastPx};
+      // ── PERFORMANCE : (parts × prix_jour) - montant_investi, un point par jour ──
+      // Calcule le portefeuille cumulatif à chaque date de transaction
+      const sqSorted = sqAll.slice().sort((a,b)=>a.date.localeCompare(b.date));
+
+      // Reconstruit l'état cumulatif jour par jour pour chaque transaction
+      let runParts = 0, runInvesti = 0;
+      const txByDate = {}; // date → { parts, investi } après cette transaction
+      sqSorted.forEach(d => {
+        if (d.type === 'investissement') {
+          runParts   += (d.nbParts||0);
+          runInvesti += Math.round((d.nbParts||0)*(d.prixUnit||0)*100)/100;
+        } else if (d.type === 'vente') {
+          // Vente : réduit parts + réduit coût proportionnellement
+          const ratio = runParts > 0 ? (d.nbParts||0)/runParts : 0;
+          runInvesti  = Math.max(0, Math.round(runInvesti*(1-ratio)*100)/100);
+          runParts    = Math.max(0, runParts-(d.nbParts||0));
+        }
+        txByDate[d.date] = { parts: runParts, investi: runInvesti };
+      });
+
+      // Filtre les prix du fond selon la période
+      const firstTxDate = sqSorted.find(d=>d.type==='investissement')?.date;
+      if (!firstTxDate) { if(p3aPerfC){p3aPerfC.destroy();p3aPerfC=null;} return; }
+
+      const periodStartStr = p3aPeriodStart(p3aPeriod);
+      // Prend le max entre début de période et date du premier invest
+      const chartFromDate = periodStartStr && periodStartStr > firstTxDate
+        ? periodStartStr : firstTxDate;
+
+      const today = new Date().toISOString().slice(0,10);
+      const pricesInRange = UBS_VITAINVEST_PRICES.filter(p => p.d >= chartFromDate && p.d <= today);
+
+      if (!pricesInRange.length) { if(p3aPerfC){p3aPerfC.destroy();p3aPerfC=null;} return; }
+
+      // Pour chaque jour avec un prix : calcule (parts_à_ce_jour × prix) - montant_investi
+      let curParts = 0, curInvesti = 0;
+      // Initialise avec l'état avant chartFromDate
+      sqSorted.forEach(d => {
+        if (d.date < chartFromDate) {
+          const snap = txByDate[d.date];
+          if (snap) { curParts = snap.parts; curInvesti = snap.investi; }
+        }
+      });
+
+      const perfData = pricesInRange.map(p => {
+        // Applique toutes les transactions jusqu'à cette date
+        sqSorted.forEach(d => {
+          if (d.date === p.d) {
+            const snap = txByDate[d.date];
+            if (snap) { curParts = snap.parts; curInvesti = snap.investi; }
+          }
+        });
+        const valeur = Math.round(curParts * p.p * 100) / 100;
+        const perf   = Math.round((valeur - curInvesti) * 100) / 100;
+        const pct    = curInvesti > 0 ? (perf/curInvesti*100).toFixed(2) : '0.00';
+        return {
+          d:       p.d,
+          label:   new Date(p.d+'T00:00:00').toLocaleDateString('fr-CH',{day:'numeric',month:'short',year:'2-digit'}),
+          perf,
+          pct,
+          px:      p.p,
+          valeur,
+          investi: curInvesti
+        };
       });
       const pCtx=document.getElementById('p3aPerfChart').getContext('2d');
       const vals=perfData.map(d=>d.perf);
@@ -2291,7 +2346,20 @@ function renderP3aInner() {
       gP.addColorStop(0,isPos?'rgba(52,211,153,.22)':'rgba(248,113,113,.22)');
       gP.addColorStop(1,isPos?'rgba(52,211,153,0)':'rgba(248,113,113,0)');
       if(p3aPerfC) p3aPerfC.destroy();
-      p3aPerfC=new Chart(pCtx,{type:'line',data:{labels:perfData.map(d=>d.label),datasets:[{data:vals,borderWidth:1.5,fill:true,backgroundColor:gP,tension:0.3,pointRadius:0,pointHoverRadius:4,pointHoverBorderColor:'#fff',pointHoverBorderWidth:2,segment:{borderColor:ctx=>vals[ctx.p1DataIndex]>=0?'#34d399':'#f87171'}}]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:600},interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{backgroundColor:'#1a1a25',borderColor:'#3a3a50',borderWidth:1,titleFont:{family:'Roboto',size:10},bodyFont:{family:'DM Mono',size:11},padding:10,displayColors:false,callbacks:{title:i=>i[0].label,label:i=>{const v=i.raw;return (v>=0?'▲ +CHF ':'▼ -CHF ')+fmt(Math.abs(v));}}}},scales:{x:{display:false},y:{grid:{color:'rgba(255,255,255,.04)'},border:{display:false},ticks:{color:C.muted,font:{family:'DM Mono',size:9},callback:v=>(v>=0?'+':'')+fmt(v)}}}}});
+      p3aPerfC=new Chart(pCtx,{type:'line',data:{labels:perfData.map(d=>d.label),datasets:[{data:vals,borderWidth:1.5,fill:true,backgroundColor:gP,tension:0.3,pointRadius:0,pointHoverRadius:4,pointHoverBorderColor:'#fff',pointHoverBorderWidth:2,segment:{borderColor:ctx=>vals[ctx.p1DataIndex]>=0?'#34d399':'#f87171'}}]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:600},interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{backgroundColor:'#1a1a25',borderColor:'#3a3a50',borderWidth:1,titleFont:{family:'Roboto',size:10},bodyFont:{family:'DM Mono',size:11},padding:10,displayColors:false,callbacks:{
+              title: i => perfData[i[0].dataIndex]?.d
+                ? new Date(perfData[i[0].dataIndex].d+'T00:00:00').toLocaleDateString('fr-CH',{day:'numeric',month:'short',year:'numeric'})
+                : i[0].label,
+              label: i => {
+                const v  = i.raw;
+                const pd = perfData[i.dataIndex];
+                if (!pd) return '';
+                return [
+                  (v>=0?'▲ +CHF ':'▼ -CHF ')+fmt(Math.abs(v))+' ('+(v>=0?'+':'')+pd.pct+'%)',
+                  'Prix: CHF '+fmt(pd.px)+' · Investi: CHF '+fmt(pd.investi)
+                ];
+              }
+            }}},scales:{x:{display:false},y:{grid:{color:'rgba(255,255,255,.04)'},border:{display:false},ticks:{color:C.muted,font:{family:'DM Mono',size:9},callback:v=>(v>=0?'+':'')+fmt(v)}}}}});
     }
   }
 }
