@@ -2104,15 +2104,20 @@ function p3aSetPilier(pilier, btn) {
 // ── Calculs portefeuille SQ ──
 function p3aCalcSQ(entries) {
   let parts=0, versements=0, dividendes=0, coutAchat=0, retrait=0, produitVente=0;
+  // coutAchatVendu = coût des parts déjà vendues (pour le cash et la plus-value)
+  let coutAchatVendu=0;
   entries.forEach(d => {
     if (d.type==='investissement') {
-      parts += (d.nbParts||0);
+      parts    += (d.nbParts||0);
       coutAchat += (d.nbParts||0)*(d.prixUnit||0);
     } else if (d.type==='vente') {
       const nbV = d.nbParts||0, pxV = d.prixUnit||0;
-      if (parts+nbV > 0) coutAchat = Math.max(0, coutAchat * (Math.max(0,parts-nbV)/(parts)));
-      parts = Math.max(0, parts - nbV);
-      produitVente += nbV * pxV;
+      // Coût proportionnel des parts vendues
+      const coutVendu = parts > 0 ? Math.round(coutAchat * (nbV/parts) * 100)/100 : 0;
+      coutAchatVendu += coutVendu;
+      coutAchat = Math.max(0, Math.round((coutAchat - coutVendu)*100)/100);
+      parts     = Math.max(0, parts - nbV);
+      produitVente += Math.round(nbV * pxV * 100)/100;
     } else if (d.type==='retrait') {
       retrait += (d.retrait||0);
     } else {
@@ -2120,8 +2125,11 @@ function p3aCalcSQ(entries) {
       dividendes += (d.dividendes||0);
     }
   });
-  const cash = Math.max(0, Math.round((versements - coutAchat + produitVente) * 100)/100);
-  return { parts:Math.max(0,parts), versements, dividendes, coutAchat, cash, retrait, produitVente };
+  // cash = versements non investis + produit net des ventes
+  // versements non investis = versements - coutAchat (parts restantes) - coutAchatVendu (parts vendues)
+  const cashNonInvesti = Math.max(0, versements - coutAchat - coutAchatVendu);
+  const cash = Math.round((cashNonInvesti + produitVente) * 100)/100;
+  return { parts:Math.max(0,parts), versements, dividendes, coutAchat, coutAchatVendu, cash, retrait, produitVente };
 }
 
 function p3aCalcMob(entries) {
