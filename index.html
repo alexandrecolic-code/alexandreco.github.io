@@ -686,6 +686,7 @@ body { font-family:'Roboto',sans-serif; background:var(--bg); color:var(--text);
       <div class="p3a-seg" id="p3aFormTypeSeg">
         <button class="p3a-seg-btn active" data-val="versement"      onclick="p3aSegSelect('p3aFormTypeSeg',this);p3aUpdateForm()">Versement</button>
         <button class="p3a-seg-btn"        data-val="investissement"  onclick="p3aSegSelect('p3aFormTypeSeg',this);p3aUpdateForm()">Investissement</button>
+        <button class="p3a-seg-btn"        data-val="vente"           onclick="p3aSegSelect('p3aFormTypeSeg',this);p3aUpdateForm()" id="p3aFormBtnVente">Vente</button>
         <button class="p3a-seg-btn"        data-val="retrait"        onclick="p3aSegSelect('p3aFormTypeSeg',this);p3aUpdateForm()">Retrait</button>
       </div>
     </div>
@@ -719,6 +720,19 @@ body { font-family:'Roboto',sans-serif; background:var(--bg); color:var(--text);
         <div class="form-group">
           <label class="form-label">Prix du fond (CHF)</label>
           <input type="number" step="0.01" class="form-input" id="p3aForm_sq_prixUnit" placeholder="0.00" oninput="p3aUpdatePreview()">
+        </div>
+      </div>
+    </div>
+    <!-- SQ vente -->
+    <div id="p3aFormFields_sq_vente" style="display:none">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Parts vendues</label>
+          <input type="number" step="0.0001" class="form-input" id="p3aForm_sq_venteNbParts" placeholder="0.0000" oninput="p3aUpdatePreview()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Prix du fond (CHF)</label>
+          <input type="number" step="0.01" class="form-input" id="p3aForm_sq_ventePrix" placeholder="0.00" oninput="p3aUpdatePreview()">
         </div>
       </div>
     </div>
@@ -1009,15 +1023,9 @@ body { font-family:'Roboto',sans-serif; background:var(--bg); color:var(--text);
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
 </button>
 <div class="bottom-nav">
-  <button class="nav-btn active" id="nav-lpp" onclick="showPage('lpp')">
-    <span class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="3"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg></span>LPP
-  </button>
-  <button class="nav-btn" id="nav-3a" onclick="showPage('3a')">
-    <span class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></span>3A
-  </button>
-</div>
-
+  <button class="nav-btn activ
 <script>
+
 // ════════════════════════════════════════
 //  UBS VITAINVEST — Yahoo Finance (pas de CSV embarqué)
 // ════════════════════════════════════════
@@ -1910,6 +1918,7 @@ function p3aUpdatePreview() {
   if (pilier==='swissquote') {
     if (type==='versement')     { val = g('p3aForm_sq_versement') + g('p3aForm_sq_dividendes'); lbl='Versement + dividendes'; }
     if (type==='investissement'){ val = g('p3aForm_sq_nbParts') * g('p3aForm_sq_prixUnit'); lbl='Valeur investie'; }
+    if (type==='vente')         { val = g('p3aForm_sq_venteNbParts') * g('p3aForm_sq_ventePrix'); lbl='Produit de la vente → cash'; }
     if (type==='retrait')       { val = g('p3aForm_sq_retrait'); lbl='Retrait'; }
   } else {
     if (type==='versement')     { val = g('p3aForm_mob_versement') - g('p3aForm_mob_frais') + g('p3aForm_mob_interets'); lbl='Net versement'; }
@@ -1933,6 +1942,7 @@ function p3aReadForm(prefix) {
   if (pilier==='swissquote') {
     if (type==='versement')     { entry.versement=g(prefix+'_sq_versement'); entry.dividendes=g(prefix+'_sq_dividendes'); }
     if (type==='investissement'){ entry.nbParts=g(prefix+'_sq_nbParts'); entry.prixUnit=g(prefix+'_sq_prixUnit'); }
+    if (type==='vente')         { entry.nbParts=g(prefix+'_sq_venteNbParts'); entry.prixUnit=g(prefix+'_sq_ventePrix'); }
     if (type==='retrait')       { entry.retrait=g(prefix+'_sq_retrait'); }
   } else {
     if (type==='versement')     { entry.versement=g(prefix+'_mob_versement'); entry.frais=g(prefix+'_mob_frais'); entry.interets=g(prefix+'_mob_interets'); }
@@ -1947,7 +1957,7 @@ function openP3aModal() {
   p3aSegSelect('p3aFormPilierSeg', document.querySelector('#p3aFormPilierSeg .p3a-seg-btn'));
   p3aSegSelect('p3aFormTypeSeg',   document.querySelector('#p3aFormTypeSeg .p3a-seg-btn'));
   p3aUpdateForm();
-  ['p3aForm_sq_versement','p3aForm_sq_dividendes','p3aForm_sq_nbParts','p3aForm_sq_prixUnit','p3aForm_sq_retrait',
+  ['p3aForm_sq_versement','p3aForm_sq_dividendes','p3aForm_sq_nbParts','p3aForm_sq_prixUnit','p3aForm_sq_venteNbParts','p3aForm_sq_ventePrix','p3aForm_sq_retrait',
    'p3aForm_mob_versement','p3aForm_mob_frais','p3aForm_mob_interets','p3aForm_mob_nbParts','p3aForm_mob_prixUnit','p3aForm_mob_retrait'
   ].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   const t=new Date(); const ds=`${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
@@ -2409,19 +2419,27 @@ function renderP3aInner() {
       const sqSorted = sqAll.slice().sort((a,b)=>a.date.localeCompare(b.date));
 
       // Reconstruit l'état cumulatif jour par jour pour chaque transaction
-      let runParts = 0, runInvesti = 0;
+      let runParts = 0, runInvesti = 0, runRealised = 0;
       const txByDate = {}; // date → { parts, investi } après cette transaction
       sqSorted.forEach(d => {
         if (d.type === 'investissement') {
           runParts   += (d.nbParts||0);
           runInvesti += Math.round((d.nbParts||0)*(d.prixUnit||0)*100)/100;
         } else if (d.type === 'vente') {
-          // Vente : réduit parts + réduit coût proportionnellement
-          const ratio = runParts > 0 ? (d.nbParts||0)/runParts : 0;
-          runInvesti  = Math.max(0, Math.round(runInvesti*(1-ratio)*100)/100);
-          runParts    = Math.max(0, runParts-(d.nbParts||0));
+          const nbV = d.nbParts||0, pxV = d.prixUnit||0;
+          // Produit de la vente (cash récupéré)
+          const produit = Math.round(nbV * pxV * 100)/100;
+          // Coût des parts vendues (proportionnel)
+          const coutVendu = runParts > 0
+            ? Math.round(runInvesti * (nbV/runParts) * 100)/100
+            : 0;
+          // La perf réalisée est figée dans runRealised
+          runRealised += Math.round((produit - coutVendu)*100)/100;
+          // Réduit le portefeuille
+          runInvesti = Math.max(0, Math.round((runInvesti - coutVendu)*100)/100);
+          runParts   = Math.max(0, runParts - nbV);
         }
-        txByDate[d.date] = { parts: runParts, investi: runInvesti };
+        txByDate[d.date] = { parts: runParts, investi: runInvesti, realised: runRealised };
       });
 
       // Filtre les prix du fond selon la période
@@ -2452,12 +2470,16 @@ function renderP3aInner() {
         sqSorted.forEach(d => {
           if (d.date === p.d) {
             const snap = txByDate[d.date];
-            if (snap) { curParts = snap.parts; curInvesti = snap.investi; }
+            if (snap) { curParts = snap.parts; curInvesti = snap.investi; curRealised = snap.realised||0; }
           }
         });
         const valeur = Math.round(curParts * p.p * 100) / 100;
-        const perf   = Math.round((valeur - curInvesti) * 100) / 100;
-        const pct    = curInvesti > 0 ? (perf/curInvesti*100).toFixed(2) : '0.00';
+        // Perf totale = plus-value latente + gains réalisés sur ventes
+        const perf   = Math.round((valeur - curInvesti + curRealised) * 100) / 100;
+        // Base de calcul = coût total investi (y compris parts déjà vendues)
+        const base   = curInvesti + (curRealised !== 0 ? Math.abs(curRealised) : 0);
+        const pct    = curInvesti > 0 || curRealised !== 0
+          ? (perf / (curInvesti || Math.abs(curRealised)) * 100).toFixed(2) : '0.00';
         return {
           d:       p.d,
           label:   new Date(p.d+'T00:00:00').toLocaleDateString('fr-CH',{day:'numeric',month:'short',year:'2-digit'}),
@@ -3155,6 +3177,11 @@ window.addEventListener('DOMContentLoaded', init);
 //  Stratégie (par ordre de priorité) :
 //  1. Prix du jour depuis Google Apps Script (proxy sans CORS)
 //     → configurez GAS_PROXY_URL avec votre URL de déploiement
+const FUND_CACHE_KEY     = 'ubs_fund_price_cache';
+const FUND_CACHE_TTL_MS  = 24 * 60 * 60 * 1000; // 24 heures
+
+// Prix historiques embarqués (CSV) — base toujours disponible
+
 //  2. Cache localStorage (valide 24h) — évite les appels répétés
 //  3. CSV embarqué comme base historique (toujours disponible)
 //
@@ -3167,9 +3194,6 @@ window.addEventListener('DOMContentLoaded', init);
 
 // ← Collez ici l'URL de votre Google Apps Script (laisser '' pour désactiver)
 const GAS_PROXY_URL = 'https://script.google.com/macros/s/AKfycbycec_AH5B4IhYz9fX2gLfIicu80fh2UPxYIRQCJQrXt6lKesH4jNOPkxsTm4Rza8fY6w/exec';
-
-const FUND_CACHE_KEY     = 'ubs_fund_price_cache';
-const FUND_CACHE_TTL_MS  = 24 * 60 * 60 * 1000; // 24 heures
 
 // Prix historiques embarqués (CSV) — base toujours disponible
 
