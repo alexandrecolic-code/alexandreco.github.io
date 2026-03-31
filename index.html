@@ -8,370 +8,445 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://accounts.google.com/gsi/client"></script>
 <style>
+/* ── FONTS ── */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600&family=DM+Mono:wght@300;400;500&display=swap');
+
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 html, body { height:100%; }
 
 :root {
-  --bg:      #0c0c0f;
-  --bg2:     #121215;
-  --bg3:     #1a1a1f;
-  --card:    #14141a;
-  --border:  #252530;
-  --text:    #e2e2ec;
-  --muted:   #5a5a72;
-  --muted2:  #3a3a50;
-  --grid:    #1a1a1f;
+  --bg:      #0a0a10;
+  --bg2:     #111118;
+  --bg3:     #18181f;
+  --card:    #13131c;
+  --border:  #1e1e2a;
+  --text:    #f0f0fa;
+  --muted:   #52527a;
+  --muted2:  #30304a;
+  --grid:    #18182a;
+  --accent:  #5b8def;
+  --orange:  #fb923c;
+  --green:   #34d399;
+  --red:     #f87171;
+  --blue:    #60a5fa;
 }
 body.light {
-  --bg:      #f4f4f8;
+  --bg:      #f0f0f6;
   --bg2:     #ffffff;
-  --bg3:     #eaeaf0;
+  --bg3:     #e8e8f0;
   --card:    #ffffff;
-  --border:  #e0e0ea;
-  --text:    #1a1a2e;
-  --muted:   #8888a8;
-  --muted2:  #c0c0d8;
-  --grid:    #f0f0f6;
+  --border:  #dcdcea;
+  --text:    #12121e;
+  --muted:   #7878a0;
+  --muted2:  #b0b0cc;
+  --grid:    #ebebf5;
 }
 
-body { font-family:'Roboto',sans-serif; background:var(--bg); color:var(--text); display:flex; flex-direction:column; min-height:100vh; transition:background .3s, color .3s; }
-
-/* ── HEADER ── */
-.header { background:var(--bg); border-bottom:none; padding:14px 16px; text-align:center; flex-shrink:0; }
-.header-title { font-size:13px; font-weight:500; letter-spacing:0.5px; }
-.header-status { font-size:10px; margin-top:3px; color:var(--muted); }
-
-/* ── TABS ── */
-.tabs { display:flex; background:var(--bg2); border-bottom:1px solid var(--border); flex-shrink:0; }
-.tab { flex:1; padding:12px 8px; text-align:center; font-size:12px; font-weight:500; color:var(--muted); cursor:pointer; border-bottom:2px solid transparent; transition:all .2s; }
-.tab.active { color:var(--text); border-bottom-color:#4d9fff; }
-.tab-icon { font-size:16px; display:block; margin-bottom:2px; }
-
-/* ── PAGES ── */
-.page { display:none; flex:1; overflow-y:auto; padding-bottom:20px; min-width:0; }
-.page.active { display:block; }
-.content { padding:16px; max-width:600px; margin:0 auto; }
-
-/* ── BOTTOM NAV ── */
-.bottom-nav { display:flex; background:var(--bg2); border-top:1px solid var(--border); flex-shrink:0; position:sticky; bottom:0; }
-.nav-btn { flex:1; padding:12px 4px 10px; text-align:center; font-size:11px; color:var(--muted); cursor:pointer; border:none; background:none; font-family:'Roboto',sans-serif; transition:color .2s; }
-.nav-btn.active { color:#4d9fff; }
-.nav-btn .nav-icon { font-size:20px; display:block; margin-bottom:2px; }
-
-/* ── HERO ── */
-.hero { border:1px solid var(--border); border-radius:20px; padding:20px; margin-bottom:12px; position:relative; overflow:hidden; }
-.hero-lpp { background:var(--card); }
-.hero-cash { background:var(--card); }
-.hero::after { content:''; position:absolute; top:-40px; right:-40px; width:160px; height:160px; border-radius:50%; pointer-events:none; }
-.hero-lpp::after { background:radial-gradient(circle,rgba(77,159,255,.06) 0%,transparent 70%); }
-.hero-cash::after { background:radial-gradient(circle,rgba(52,211,153,.06) 0%,transparent 70%); }
-.hero-label { font-size:10px; text-transform:uppercase; letter-spacing:1.5px; color:var(--muted); margin-bottom:6px; }
-.hero-label .accent-lpp { color:#4d9fff; }
-.hero-label .accent-cash { color:#34d399; }
-.hero-value { font-size:36px; font-weight:700; color:var(--text); letter-spacing:-1px; line-height:1; }
-.hero-value small { font-size:18px; color:var(--muted); font-weight:300; }
-.hero-meta { display:flex; margin-top:14px; padding-top:14px; border-top:1px solid var(--border); }
-.meta-item { flex:1; }
-.meta-label { font-size:9px; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin-bottom:3px; }
-.meta-value { font-size:11px; font-weight:500; }
-
-/* ── PERIODS ── */
-.periods { display:flex; gap:6px; margin-bottom:12px; }
-.period-btn { flex:1; padding:8px 4px; background:var(--bg3); border:1px solid var(--border); border-radius:10px; color:var(--muted); font-family:'Roboto',sans-serif; font-size:11px; cursor:pointer; transition:all .2s; }
-.period-btn.active { background:#1d6fe8; border-color:#4d9fff; color:white; }
-
-/* ── CARDS ── */
-.card { background:var(--card); border:1px solid var(--border); border-radius:20px; padding:16px; margin-bottom:12px; }
-.card:last-child { margin-bottom:0; }
-.card-title { font-size:10px; text-transform:uppercase; letter-spacing:1.5px; color:var(--muted); margin-bottom:14px; }
-
-/* ── SPLIT BARS ── */
-.split-row { margin-bottom:14px; }
-.split-row:last-child { margin-bottom:0; }
-.split-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; }
-.split-left { display:flex; align-items:center; gap:6px; font-size:11px; }
-.split-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
-.split-right { font-size:12px; }
-.split-pct { font-size:10px; color:var(--muted); margin-left:6px; }
-.split-bar-bg { height:5px; background:var(--bg3); border-radius:3px; overflow:hidden; }
-.split-bar-fill { height:100%; border-radius:3px; transition:width 1s ease; }
-
-/* ── SAVING BADGE ── */
-.saving-badge { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:20px; font-size:11px; font-weight:500; margin-top:6px; }
-.saving-good { background:rgba(52,211,153,0.12); color:#34d399; }
-.saving-bad  { background:rgba(248,113,113,0.12); color:#f87171; }
-.tx-shortcut { flex:1; padding:6px 4px; background:var(--bg3); border:1px solid var(--border); border-radius:8px; color:var(--muted); font-family:'Roboto',sans-serif; font-size:10px; cursor:pointer; transition:all .2s; }
-.tx-shortcut:hover { color:var(--text); border-color:#4d9fff; }
-.tx-row { display:flex; align-items:center; justify-content:space-between; padding:11px 0; border-bottom:1px solid var(--border); }
-.tx-row:last-child { border-bottom:none; }
-.tx-date { font-size:10px; color:var(--muted); margin-bottom:2px; }
-.tx-label { font-size:12px; }
-.tx-amount { font-size:13px; font-weight:500; }
-
-/* ── Login Page ── */
-#loginPage {
-  display:none; position:fixed; inset:0; z-index:2000;
-  background:var(--bg);
-  flex-direction:column; align-items:center; justify-content:center;
-  padding:32px 24px;
-}
-#loginPage.visible { display:flex; }
-.login-logo {
-  width:72px; height:72px; border-radius:24px;
-  background:linear-gradient(135deg,#1a1a2e 0%,#252540 100%);
-  border:1px solid var(--border);
-  display:flex; align-items:center; justify-content:center;
-  margin-bottom:28px;
-  box-shadow: 0 8px 32px rgba(77,159,255,.15);
-}
-.login-title { font-size:26px; font-weight:300; letter-spacing:-.5px; margin-bottom:8px; text-align:center; }
-.login-subtitle { font-size:13px; color:var(--muted); text-align:center; margin-bottom:48px; line-height:1.5; }
-.login-features { width:100%; max-width:320px; margin-bottom:40px; display:flex; flex-direction:column; gap:12px; }
-.login-feature { display:flex; align-items:center; gap:12px; padding:12px 16px; background:var(--bg3); border-radius:14px; border:1px solid var(--border); }
-.login-feature-icon { width:32px; height:32px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-.login-feature-text { font-size:12px; color:var(--muted); line-height:1.4; }
-.login-feature-title { font-size:13px; font-weight:500; color:var(--text); margin-bottom:2px; }
-.login-google-btn {
-  width:100%; max-width:320px;
-  padding:16px 24px;
-  background:#4d9fff;
-  border:none; border-radius:16px;
-  color:white; font-family:Roboto,sans-serif; font-size:15px; font-weight:500;
-  cursor:pointer; display:flex; align-items:center; justify-content:center; gap:10px;
-  transition:all .2s; box-shadow:0 4px 20px rgba(77,159,255,.3);
-}
-.login-google-btn:hover { background:#3d8ff0; transform:translateY(-1px); }
-.login-google-btn:active { transform:translateY(0); opacity:.9; }
-.login-demo-btn {
-  margin-top:14px; background:none; border:none;
-  color:var(--muted); font-family:Roboto,sans-serif; font-size:12px;
-  cursor:pointer; padding:8px; text-decoration:underline;
-}
-.login-footer { margin-top:32px; font-size:10px; color:var(--muted2); text-align:center; line-height:1.6; }
-
-/* ── Modal ── */
-.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:1000; align-items:flex-end; justify-content:center; }
-.modal-overlay.open { display:flex; }
-.modal { background:var(--bg2); border-radius:24px 24px 0 0; padding:24px; width:100%; max-width:500px; max-height:85vh; overflow-y:auto; }
-.modal-title { font-size:15px; font-weight:500; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center; }
-.modal-close { background:var(--bg3); border:none; border-radius:50%; width:28px; height:28px; cursor:pointer; color:var(--muted); font-size:16px; display:flex; align-items:center; justify-content:center; }
-.form-group { margin-bottom:14px; }
-.form-label { font-size:11px; color:var(--muted); margin-bottom:5px; display:block; }
-.form-input { width:100%; padding:11px 14px; background:var(--bg3); border:1px solid var(--border); border-radius:12px; color:var(--text); font-family:Roboto,sans-serif; font-size:14px; box-sizing:border-box; outline:none; }
-.form-input:focus { border-color:#4d9fff; }
-.form-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-.btn-primary { width:100%; padding:14px; background:#4d9fff; border:none; border-radius:14px; color:white; font-family:Roboto,sans-serif; font-size:14px; font-weight:500; cursor:pointer; margin-top:8px; }
-.btn-primary:active { opacity:.85; }
-.btn-danger { background:#f87171; color:white; border:none; border-radius:8px; padding:4px 10px; font-size:11px; cursor:pointer; font-family:Roboto,sans-serif; }
-.add-btn { display:flex; align-items:center; gap:6px; padding:8px 14px; background:var(--bg3); border:1px solid var(--border); border-radius:12px; color:var(--muted); font-family:Roboto,sans-serif; font-size:12px; cursor:pointer; transition:all .2s; }
-.add-btn:hover { border-color:#4d9fff; color:#4d9fff; }
-.data-row { display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border); font-size:12px; }
-.data-row:last-child { border-bottom:none; }
-
-/* ── Desktop layout ── */
-@media (min-width: 768px) {
-  body { flex-direction:row; }
-
-  /* Sidebar nav on the left */
-  .bottom-nav {
-    flex-direction:column;
-    width:88px;
-    min-height:100vh;
-    border-top:none;
-    border-right:1px solid var(--border);
-    position:sticky;
-    top:0;
-    height:100vh;
-    padding:16px 0;
-    justify-content:flex-start;
-    gap:4px;
-  }
-  .nav-btn { padding:14px 4px; font-size:10px; }
-
-  /* Main content area */
-  .page { padding-bottom:40px; }
-  .content {
-    max-width:900px;
-    padding:24px;
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    grid-template-rows:auto;
-    column-gap:16px;
-    align-items:start;
-  }
-
-  /* Hero and periods span full width */
-  .content > .hero,
-  .content > .periods,
-  #cashPeriods, #lppPeriods, #p3aPeriods, #totalPeriods,
-  .content > div[style*="padding:0 16px"] { grid-column:1 / -1; }
-
-  /* Header spans full width */
-  .header { text-align:left; padding:16px 24px; }
-
-  /* Bigger chart heights on desktop */
-  .card { margin-bottom:16px; }
-
-  /* Hero bigger */
-  .hero { padding:28px; }
-  .hero-value { font-size:48px; }
-  .hero-label { font-size:12px; }
-  .meta-label { font-size:10px; }
-  .meta-value { font-size:13px; }
+body {
+  font-family: 'Roboto', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  transition: background .3s, color .3s;
 }
 
-@media (min-width: 1100px) {
-  .content { max-width:1100px; }
+/* ══ HEADER ══ */
+.header {
+  background: var(--bg);
+  padding: 16px 20px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border);
 }
+.header-left { display: flex; align-items: center; gap: 10px; }
+.header-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: linear-gradient(135deg, #1a2a4a, #2a3a6a);
+  border: 2px solid var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; overflow: hidden;
+}
+.header-avatar svg { width: 20px; height: 20px; }
+.header-appname { font-size: 15px; font-weight: 600; letter-spacing: -.3px; }
+.header-bell {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--bg3); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.header-title { font-size: 13px; font-weight: 500; letter-spacing: 0.5px; }
+.header-status { font-size: 10px; margin-top: 3px; color: var(--muted); }
 
-/* ═══════════ LPP REDESIGN v4 ═══════════ */
-@keyframes lppNumIn {
-  from { opacity:0; transform:translateY(7px); }
-  to   { opacity:1; transform:translateY(0); }
-}
-@keyframes lppBarIn {
-  from { width:0 !important; opacity:0; }
-}
-@keyframes lppFadeIn {
-  from { opacity:0; transform:translateY(4px); }
-  to   { opacity:1; transform:translateY(0); }
-}
+/* ══ PAGES ══ */
+.page { display: none; flex: 1; overflow-y: auto; padding-bottom: 90px; }
+.page.active { display: block; }
 
-#page-lpp { background:var(--bg); }
+/* ══ BOTTOM NAV ══ */
+.bottom-nav {
+  display: flex;
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 100;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.nav-btn {
+  flex: 1; padding: 10px 4px 8px;
+  text-align: center; font-size: 10px;
+  color: var(--muted); cursor: pointer;
+  border: none; background: none;
+  font-family: 'Roboto', sans-serif;
+  transition: color .2s;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+.nav-btn.active { color: var(--accent); }
+.nav-btn .nav-icon { display: block; }
+.nav-btn.active .nav-icon svg { stroke: var(--accent); }
 
+/* ══ HERO ZONE ══ */
 .lpp-hero-zone {
-  padding:24px 18px 0; position:relative; overflow:hidden;
+  padding: 28px 20px 8px;
+  position: relative; overflow: hidden;
 }
 .lpp-hero-zone::before {
-  content:''; position:absolute; top:-60px; right:-40px;
-  width:220px; height:220px;
-  background:radial-gradient(circle,rgba(77,159,255,.07) 0%,transparent 70%);
-  pointer-events:none;
+  content: ''; position: absolute; top: -80px; right: -60px;
+  width: 260px; height: 260px;
+  background: radial-gradient(circle, rgba(77,159,255,.06) 0%, transparent 65%);
+  pointer-events: none;
 }
 .lpp-eyebrow {
-  font-size:9px; text-transform:uppercase; letter-spacing:1.8px;
-  color:var(--muted); margin-bottom:8px; font-family:Roboto,sans-serif;
+  font-size: 10px; text-transform: uppercase; letter-spacing: 2.5px;
+  color: var(--muted); margin-bottom: 8px; font-weight: 600;
+  text-align: center;
 }
 .lpp-big-num {
-  font-family:'Bebas Neue',sans-serif; font-size:68px;
-  line-height:.88; letter-spacing:-.01em; color:var(--text); margin-bottom:14px;
+  font-size: 52px; font-weight: 700;
+  line-height: 1; letter-spacing: -2px; color: var(--text); margin-bottom: 12px;
+  text-align: center;
 }
 .lpp-big-num .lpp-chf {
-  font-family:'DM Mono',monospace; font-size:22px; font-weight:300;
-  color:var(--muted); vertical-align:top; margin-top:10px; margin-right:3px;
+  font-size: 20px; font-weight: 300;
+  color: var(--muted); margin-right: 4px; vertical-align: top; margin-top: 10px;
 }
 .lpp-num-animate { animation: lppNumIn .35s cubic-bezier(.2,0,.4,1) both; }
-
-.lpp-ytd-row { display:flex; align-items:center; gap:8px; }
-.lpp-ytd-pill {
-  display:inline-flex; align-items:center; gap:5px;
-  padding:5px 11px; border-radius:7px;
-  font-size:12px; font-weight:600; font-family:'DM Mono',monospace;
+@keyframes lppNumIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
-.lpp-ytd-pill.up   { background:rgba(77,159,255,.13); color:#4d9fff; }
-.lpp-ytd-pill.down { background:rgba(248,113,113,.1);  color:#f87171; }
-.lpp-ytd-sub { font-size:10px; color:var(--muted); font-family:Roboto,sans-serif; }
+
+/* YTD pill */
+.lpp-ytd-row { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 4px; }
+.lpp-ytd-pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 12px; border-radius: 20px;
+  font-size: 12px; font-weight: 600; font-family: 'DM Mono', monospace;
+}
+.lpp-ytd-pill.up   { background: rgba(52,211,153,.12); color: #34d399; }
+.lpp-ytd-pill.down { background: rgba(248,113,113,.1);  color: #f87171; }
+.lpp-ytd-sub { font-size: 10px; color: var(--muted); }
 
 /* Line chart */
-.lpp-line-wrap { margin:18px 18px 0; height:110px; position:relative; }
-.lpp-axis-row  { position:relative; height:18px; margin:2px 18px 0; }
+.lpp-line-wrap { margin: 20px 20px 0; height: 120px; position: relative; }
+.lpp-axis-row  { position: relative; height: 18px; margin: 2px 20px 0; }
 .lpp-axis-row span {
-  position:absolute; font-size:9px; color:var(--muted);
-  font-family:'DM Mono',monospace; transform:translateX(-50%); white-space:nowrap;
+  position: absolute; font-size: 9px; color: var(--muted);
+  font-family: 'DM Mono', monospace; transform: translateX(-50%); white-space: nowrap;
 }
 
-/* Period pills */
+/* ══ PERIOD PILLS ══ */
 .lpp-pill-row {
-  display:flex; gap:0; padding:16px 18px 0; width:100%; box-sizing:border-box;
-  border-bottom:1px solid var(--border);
+  display: flex; gap: 8px;
+  padding: 20px 20px 0;
 }
 .lpp-pill {
-  flex:1; padding:7px 4px; border:none; border-bottom:2px solid transparent;
-  background:transparent; color:var(--muted); font-family:Roboto,sans-serif;
-  font-size:12px; font-weight:500; cursor:pointer; transition:all .18s; text-align:center;
-  outline:none; -webkit-tap-highlight-color:transparent;
+  padding: 7px 18px; border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--bg3); color: var(--muted);
+  font-family: 'Roboto', sans-serif; font-size: 12px; font-weight: 500;
+  cursor: pointer; transition: all .18s;
+  outline: none; -webkit-tap-highlight-color: transparent;
 }
-.lpp-pill:hover { color:var(--text); }
-.lpp-pill.active { color:#4d9fff; border-bottom-color:#4d9fff; font-weight:600; }
+.lpp-pill:hover { color: var(--text); border-color: var(--muted2); }
+.lpp-pill.active {
+  background: var(--accent); border-color: var(--accent);
+  color: #fff; font-weight: 700; box-shadow: 0 2px 12px rgba(91,141,239,.3);
+}
 
-/* KPI grid 2×2 avec barres de poids */
-/* KPI strip — une seule ligne 4 colonnes */
+/* 3A period pills — orange */
+.p3a-period-row { display: flex; gap: 8px; padding: 20px 20px 0; }
+.p3a-period-btn {
+  padding: 7px 16px; border-radius: 20px;
+  border: 1px solid var(--border);
+  background: transparent; color: var(--muted);
+  font-family: 'Roboto', sans-serif; font-size: 12px; font-weight: 500;
+  cursor: pointer; transition: all .18s; outline: none;
+}
+.p3a-period-btn:hover { color: var(--text); border-color: var(--muted2); }
+.p3a-period-btn.active {
+  background: var(--orange); border-color: var(--orange);
+  color: #fff; font-weight: 600;
+}
+
+/* ══ KPI CARDS 2×2 ══ */
 .lpp-kpi-grid {
-  display:grid; grid-template-columns:repeat(4,1fr);
-  margin:12px 18px 0;
-  border:1px solid var(--border); border-radius:14px; overflow:hidden;
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 12px; padding: 16px 20px 0;
 }
 .lpp-kpi-item {
-  background:var(--bg2);
-  padding:11px 10px 13px;
-  position:relative; overflow:hidden;
-  border-right:1px solid var(--border);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 18px 16px;
+  position: relative; overflow: hidden;
+  transition: border-color .2s;
 }
-.lpp-kpi-item:last-child { border-right:none; }
+.lpp-kpi-icon {
+  width: 36px; height: 36px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 12px;
+}
 .lpp-kpi-lbl {
-  font-size:8px; text-transform:uppercase; letter-spacing:1px;
-  color:var(--muted); margin-bottom:5px; font-family:Roboto,sans-serif;
+  font-size: 10px; color: var(--muted);
+  margin-bottom: 4px; font-weight: 400;
 }
 .lpp-kpi-val {
-  font-family:'DM Mono',monospace; font-size:12px;
-  font-weight:500; letter-spacing:-.02em;
+  font-size: 24px; font-weight: 700;
+  letter-spacing: -0.8px; line-height: 1.1;
+  font-family: 'DM Mono', monospace;
 }
 .lpp-kpi-pct {
-  font-size:9px; color:var(--muted); font-family:'DM Mono',monospace;
-  margin-top:2px;
+  font-size: 11px; margin-top: 8px;
+  font-family: 'DM Mono', monospace; font-weight: 500;
 }
-/* liseré coloré uniquement en bas */
-.lpp-kpi-foot {
-  position:absolute; left:0; right:0; bottom:0; height:2px;
-  background:var(--border);
+/* Barre colorée en bas */
+.lpp-kpi-bar {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 3px;
+  background: var(--border);
 }
-.lpp-kpi-foot-fill {
-  height:100%;
-  transition:width .8s cubic-bezier(.4,0,.2,1);
-  animation:lppBarIn .8s cubic-bezier(.4,0,.2,1) both;
+.lpp-kpi-bar-fill {
+  height: 100%; border-radius: 0 2px 2px 0;
+  transition: width .8s cubic-bezier(.4,0,.2,1);
 }
 
-/* Chart cards style line chart */
+/* ══ CARDS ══ */
 .lpp-card {
-  background:var(--card); border:1px solid var(--border);
-  border-radius:18px; padding:16px; margin:12px 18px 0;
-  animation: lppFadeIn .4s ease both;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 20px;
+  margin: 12px 20px 0;
 }
 .lpp-card-title {
-  font-size:9px; text-transform:uppercase; letter-spacing:1.5px;
-  color:var(--muted); margin-bottom:14px; font-weight:600; font-family:Roboto,sans-serif;
+  font-size: 15px; font-weight: 700;
+  color: var(--text); margin-bottom: 16px;
+  letter-spacing: -0.2px;
+}
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 16px; margin-bottom: 12px; }
+.card-title { font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); margin-bottom: 14px; }
+
+/* ══ 3A PILIER SWITCH ══ */
+.p3a-switch {
+  display: flex; gap: 0;
+  padding: 0 20px; margin-top: 16px;
+  width: 100%; box-sizing: border-box;
+  border-bottom: 1px solid var(--border);
+}
+.p3a-switch-btn {
+  flex: 1; padding: 10px 4px;
+  border: none; border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  background: transparent; color: var(--muted);
+  font-family: 'Roboto', sans-serif; font-size: 13px; font-weight: 500;
+  cursor: pointer; transition: all .18s; text-align: center; outline: none;
+}
+.p3a-switch-btn.active {
+  color: var(--orange); border-bottom-color: var(--orange);
 }
 
-/* 3A pill active — violet */
-.p3a-pill.active { background:#d97706; border-color:#fb923c; color:#fff; }
+/* ══ SEGMENTED CONTROL (formulaires) ══ */
+.p3a-seg { display: flex; gap: 4px; background: var(--bg3); padding: 3px; border-radius: 10px; }
+.p3a-seg-btn { flex: 1; padding: 7px 4px; border: none; border-radius: 7px; background: transparent; color: var(--muted); font-family: 'Roboto', sans-serif; font-size: 11px; font-weight: 500; cursor: pointer; transition: all .18s; }
+.p3a-seg-btn.active { background: var(--bg2); color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,.25); }
 
+/* ══ BADGES ══ */
+.p3a-badge { display: inline-block; padding: 2px 7px; border-radius: 6px; font-size: 9px; font-weight: 600; letter-spacing: .4px; text-transform: uppercase; }
+.p3a-badge-sq  { background: rgba(251,146,60,.12); color: #fb923c; }
+.p3a-badge-mob { background: rgba(96,165,250,.12);  color: #60a5fa; }
 
-/* 3A — segmented control */
-.p3a-seg { display:flex; gap:4px; background:var(--bg3); padding:3px; border-radius:10px; }
-.p3a-seg-btn { flex:1; padding:7px 4px; border:none; border-radius:7px; background:transparent; color:var(--muted); font-family:Roboto,sans-serif; font-size:11px; font-weight:500; cursor:pointer; transition:all .18s; }
-.p3a-seg-btn.active { background:var(--bg2); color:var(--text); box-shadow:0 1px 4px rgba(0,0,0,.25); }
+/* ══ TRANSACTIONS LIST ══ */
+.tx-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.tx-row:last-child { border-bottom: none; }
+.tx-date { font-size: 10px; color: var(--muted); margin-bottom: 2px; }
+.tx-label { font-size: 12px; }
+.tx-amount { font-size: 13px; font-weight: 500; }
+.tx-shortcut { flex: 1; padding: 6px 4px; background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; color: var(--muted); font-family: 'Roboto', sans-serif; font-size: 10px; cursor: pointer; transition: all .2s; }
+.tx-shortcut:hover { color: var(--text); border-color: var(--accent); }
+.data-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+.data-row:last-child { border-bottom: none; }
 
-/* 3A — pilier badge in tx list */
-.p3a-badge { display:inline-block; padding:2px 7px; border-radius:6px; font-size:9px; font-weight:600; letter-spacing:.4px; text-transform:uppercase; }
-.p3a-badge-sq  { background:rgba(251,146,60,.12); color:#fb923c; }
-.p3a-badge-mob { background:rgba(96,165,250,.12);  color:#60a5fa; }
+/* ══ PERIODS (legacy compat) ══ */
+.periods { display: flex; gap: 6px; margin-bottom: 12px; }
+.period-btn { flex: 1; padding: 8px 4px; background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; color: var(--muted); font-family: 'Roboto', sans-serif; font-size: 11px; cursor: pointer; transition: all .2s; }
+.period-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
 
-/* 3A — pilier switch tabs */
-.p3a-period-row {
-  display:flex; gap:0; padding:16px 18px 0; width:100%; box-sizing:border-box;
+/* ══ SAVING BADGE ══ */
+.saving-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; margin-top: 6px; }
+.saving-good { background: rgba(52,211,153,0.12); color: #34d399; }
+.saving-bad  { background: rgba(248,113,113,0.12); color: #f87171; }
+
+/* ══ SPLIT BARS ══ */
+.split-row { margin-bottom: 14px; }
+.split-row:last-child { margin-bottom: 0; }
+.split-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+.split-left { display: flex; align-items: center; gap: 6px; font-size: 11px; }
+.split-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.split-right { font-size: 12px; }
+.split-pct { font-size: 10px; color: var(--muted); margin-left: 6px; }
+.split-bar-bg { height: 5px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
+.split-bar-fill { height: 100%; border-radius: 3px; transition: width 1s ease; }
+
+/* ══ LOGIN ══ */
+#loginPage {
+  display: none; position: fixed; inset: 0; z-index: 2000;
+  background: var(--bg);
+  flex-direction: column; align-items: center; justify-content: center;
+  padding: 32px 24px;
 }
-.p3a-period-btn {
-  flex:1; padding:7px 4px; border:none; border-bottom:2px solid transparent;
-  background:transparent; color:var(--muted); font-family:Roboto,sans-serif;
-  font-size:12px; font-weight:500; cursor:pointer; transition:all .18s; text-align:center;
-  outline:none; -webkit-tap-highlight-color:transparent;
+#loginPage.visible { display: flex; }
+.login-logo {
+  width: 72px; height: 72px; border-radius: 24px;
+  background: linear-gradient(135deg, #1a1a2e 0%, #252540 100%);
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 28px;
+  box-shadow: 0 8px 32px rgba(77,159,255,.15);
 }
-.p3a-period-btn:hover { color:var(--text); }
-.p3a-period-btn.active { color:#fb923c; border-bottom-color:#fb923c; font-weight:600; }
-.p3a-switch { display:flex; gap:0; padding:0 18px; margin-top:16px; width:100%; box-sizing:border-box; border-bottom:1px solid var(--border); }
-.p3a-switch-btn { flex:1; padding:9px 4px; border:none; border-bottom:2px solid transparent; margin-bottom:-1px; background:transparent; color:var(--muted); font-family:Roboto,sans-serif; font-size:12px; font-weight:500; cursor:pointer; transition:all .18s; text-align:center; outline:none; }
-.p3a-switch-btn.active { border-color:#fb923c; color:#fb923c; background:rgba(251,146,60,.07); }
+.login-title { font-size: 26px; font-weight: 300; letter-spacing: -.5px; margin-bottom: 8px; text-align: center; }
+.login-subtitle { font-size: 13px; color: var(--muted); text-align: center; margin-bottom: 48px; line-height: 1.5; }
+.login-features { width: 100%; max-width: 320px; margin-bottom: 40px; display: flex; flex-direction: column; gap: 12px; }
+.login-feature { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--bg3); border-radius: 14px; border: 1px solid var(--border); }
+.login-feature-icon { width: 32px; height: 32px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.login-feature-text { font-size: 12px; color: var(--muted); line-height: 1.4; }
+.login-feature-title { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 2px; }
+.login-google-btn {
+  width: 100%; max-width: 320px; padding: 16px 24px;
+  background: var(--accent); border: none; border-radius: 16px;
+  color: white; font-family: Roboto, sans-serif; font-size: 15px; font-weight: 500;
+  cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
+  transition: all .2s; box-shadow: 0 4px 20px rgba(77,159,255,.3);
+}
+.login-google-btn:hover { opacity: .9; transform: translateY(-1px); }
+.login-demo-btn {
+  margin-top: 14px; background: none; border: none;
+  color: var(--muted); font-family: Roboto, sans-serif; font-size: 12px;
+  cursor: pointer; padding: 8px; text-decoration: underline;
+}
+.login-footer { margin-top: 32px; font-size: 10px; color: var(--muted2); text-align: center; line-height: 1.6; }
 
+/* ══ MODAL ══ */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 1000; align-items: flex-end; justify-content: center; }
+.modal-overlay.open { display: flex; }
+.modal { background: var(--bg2); border-radius: 24px 24px 0 0; padding: 24px; width: 100%; max-width: 500px; max-height: 85vh; overflow-y: auto; }
+.modal-title { font-size: 15px; font-weight: 600; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+.modal-close { background: var(--bg3); border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; color: var(--muted); font-size: 16px; display: flex; align-items: center; justify-content: center; }
+.form-group { margin-bottom: 14px; }
+.form-label { font-size: 11px; color: var(--muted); margin-bottom: 6px; display: block; text-transform: uppercase; letter-spacing: .5px; }
+.form-input { width: 100%; padding: 12px 14px; background: var(--bg3); border: 1px solid var(--border); border-radius: 12px; color: var(--text); font-family: Roboto, sans-serif; font-size: 14px; box-sizing: border-box; outline: none; transition: border-color .2s; }
+.form-input:focus { border-color: var(--accent); }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.btn-primary { width: 100%; padding: 14px; background: var(--accent); border: none; border-radius: 14px; color: white; font-family: Roboto, sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 8px; transition: opacity .2s; }
+.btn-primary:active { opacity: .85; }
+.btn-danger { background: #f87171; color: white; border: none; border-radius: 8px; padding: 4px 10px; font-size: 11px; cursor: pointer; font-family: Roboto, sans-serif; }
+.add-btn { display: flex; align-items: center; gap: 6px; padding: 8px 14px; background: var(--bg3); border: 1px solid var(--border); border-radius: 12px; color: var(--muted); font-family: Roboto, sans-serif; font-size: 12px; cursor: pointer; transition: all .2s; }
+.add-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ══ FAB ══ */
+.fab {
+  position: fixed; bottom: 80px; right: 20px;
+  width: 52px; height: 52px; border-radius: 16px;
+  background: var(--accent); border: none;
+  box-shadow: 0 4px 20px rgba(77,159,255,.4);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all .2s; z-index: 50;
+}
+.fab:active { transform: scale(.94); }
+
+/* ══ DESKTOP ══ */
+@media (min-width: 768px) {
+  body { flex-direction: row; }
+  .bottom-nav {
+    flex-direction: column; width: 80px; min-height: 100vh;
+    border-top: none; border-right: 1px solid var(--border);
+    position: sticky; top: 0; height: 100vh;
+    padding: 20px 0; justify-content: flex-start; gap: 4px;
+    bottom: auto; left: auto; right: auto;
+  }
+  .nav-btn { padding: 14px 4px; font-size: 10px; }
+  .page { padding-bottom: 40px; }
+}
+
+/* ══ LPP KPI — animation barre ══ */
+@keyframes lppBarIn { from { width: 0 !important; opacity: 0; } }
+@keyframes lppFadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Chart legend — like "Savings · Interest · Redemptions" */
+.chart-legend {
+  display: flex; gap: 16px; margin-top: 10px;
+  justify-content: flex-start; flex-wrap: wrap;
+}
+.chart-legend-item {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 11px; color: var(--muted); font-family: Roboto, sans-serif;
+}
+.chart-legend-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+}
+
+/* Section header (like "Evolution", "Capital Evolution") */
+.section-header {
+  font-size: 17px; font-weight: 700; color: var(--text);
+  letter-spacing: -0.3px; padding: 20px 20px 0;
+}
+
+/* Monthly contributions bar (horizontal) */
+.contrib-list { padding: 0 20px; margin-top: 4px; }
+.contrib-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 0; border-bottom: 1px solid var(--border);
+}
+.contrib-row:last-child { border-bottom: none; }
+.contrib-month {
+  width: 28px; font-size: 10px; font-weight: 700; 
+  color: var(--muted); letter-spacing: 1px; text-transform: uppercase;
+  flex-shrink: 0;
+}
+.contrib-bar-wrap { flex: 1; height: 8px; background: var(--bg3); border-radius: 4px; overflow: hidden; }
+.contrib-bar-fill { height: 100%; border-radius: 4px; background: var(--accent); transition: width .6s ease; }
+.contrib-amount {
+  width: 44px; text-align: right; font-size: 12px; font-weight: 600;
+  color: var(--text); font-family: 'DM Mono', monospace;
+  flex-shrink: 0;
+}
+
+/* KPI icon background colors */
+.kpi-bg-green  { background: rgba(52,211,153,.12); }
+.kpi-bg-orange { background: rgba(251,146,60,.12); }
+.kpi-bg-blue   { background: rgba(96,165,250,.12); }
+.kpi-bg-red    { background: rgba(248,113,113,.12); }
+
+/* Pill row — centered */
+.lpp-pill-row {
+  display: flex; gap: 8px;
+  padding: 20px 20px 4px;
+  justify-content: center;
+}
+
+/* Bottom nav refinement */
 </style>
 </head>
 <body>
@@ -476,6 +551,9 @@ body { font-family:'Roboto',sans-serif; background:var(--bg); color:var(--text);
     </div>
   </div>
 
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 0">
+    <span style="font-size:17px;font-weight:700;color:var(--text);letter-spacing:-0.3px">Evolution</span>
+  </div>
   <div class="lpp-line-wrap">
     <canvas id="lppLineChart"></canvas>
   </div>
@@ -491,14 +569,15 @@ body { font-family:'Roboto',sans-serif; background:var(--bg); color:var(--text);
   <!-- KPI grid rendu dynamiquement -->
   <div class="lpp-kpi-grid" id="lppKpiGrid"></div>
 
+  <div class="section-header">Capital Evolution</div>
   <div class="lpp-card">
-    <div class="lpp-card-title">Évolution du capital</div>
     <div style="position:relative;height:160px"><canvas id="lppAreaChart"></canvas></div>
+    <div class="chart-legend" id="lppAreaLegend"></div>
   </div>
 
-  <div class="lpp-card">
-    <div class="lpp-card-title">Versements mensuels</div>
-    <div style="position:relative;height:140px"><canvas id="lppBarChart"></canvas></div>
+  <div class="section-header">Monthly Contributions</div>
+  <div class="lpp-card" style="padding:8px 4px">
+    <div id="lppContribList" class="contrib-list"></div>
   </div>
 
   <div style="padding:14px 18px 40px">
@@ -515,7 +594,7 @@ body { font-family:'Roboto',sans-serif; background:var(--bg); color:var(--text);
 <div class="page" id="page-3a">
   <!-- Hero zone — orange -->
   <div class="lpp-hero-zone">
-    <div class="lpp-eyebrow">3ème Pilier · Solde actuel</div>
+    <div class="lpp-eyebrow">3ème Pilier · Solde Actuel</div>
     <div class="lpp-big-num" id="p3aHeroNum">
       <span class="lpp-chf">CHF</span><span id="p3aVal">—</span>
     </div>
@@ -524,14 +603,17 @@ body { font-family:'Roboto',sans-serif; background:var(--bg); color:var(--text);
       <span class="lpp-ytd-sub" id="p3aYtdSub">depuis janv. 2026</span>
     </div>
   </div>
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 0">
+    <span style="font-size:17px;font-weight:700;color:var(--text);letter-spacing:-0.3px">Evolution</span>
+  </div>
   <div class="lpp-line-wrap"><canvas id="p3aLineChart"></canvas></div>
   <div class="lpp-axis-row" id="p3aAxisRow"></div>
   <!-- Filtres temporels -->
-  <div class="p3a-period-row">
-    <button class="p3a-period-btn" onclick="setP3aPeriod('ytd',this)">YTD</button>
-    <button class="p3a-period-btn active" onclick="setP3aPeriod('6m',this)">6 mois</button>
-    <button class="p3a-period-btn" onclick="setP3aPeriod('1y',this)">1 an</button>
-    <button class="p3a-period-btn" onclick="setP3aPeriod('all',this)">Tout</button>
+  <div class="lpp-pill-row">
+    <button class="lpp-pill" onclick="setP3aPeriod('ytd',this)">YTD</button>
+    <button class="lpp-pill active" onclick="setP3aPeriod('6m',this)">6M</button>
+    <button class="lpp-pill" onclick="setP3aPeriod('1y',this)">1Y</button>
+    <button class="lpp-pill" onclick="setP3aPeriod('all',this)">ALL</button>
   </div>
   <!-- Switch pilier -->
   <div class="p3a-switch" id="p3aPilierSwitch">
@@ -1529,15 +1611,27 @@ function renderLpp() {
     { label:'Rachats',  val:sumR,   base:sumR,       col:'#60a5fa' },
     { label:'Retrait',  val:sumRet, base:sumRet,     col:'#f87171' },
   ];
+  const kpiIcons = {
+    'Épargne':  { svg:'<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>', bg:'rgba(52,211,153,.12)', col:'#34d399' },
+    'Intérêts': { svg:'<line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>', bg:'rgba(251,146,60,.12)', col:'#fb923c' },
+    'Rachats':  { svg:'<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>', bg:'rgba(96,165,250,.12)', col:'#60a5fa' },
+    'Retrait':  { svg:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>', bg:'rgba(248,113,113,.12)', col:'#f87171' },
+  };
   document.getElementById('lppKpiGrid').innerHTML = kpis.map(k => {
     const pct     = total > 0 ? Math.min(k.base / total * 100, 100) : 0;
     const display = k.val > 0 ? fmt(k.val) : '—';
-    const pctLbl  = k.val > 0 && total > 0 ? (k.base / total * 100).toFixed(1) + '%' : '';
+    const pctSign = k.label === 'Retrait' ? '-' : '+';
+    const pctLbl  = k.val > 0 && total > 0 ? pctSign + (k.base / total * 100).toFixed(1) + '%' : '';
+    const icon    = kpiIcons[k.label] || { svg:'', bg:'var(--bg3)', col:k.col };
+    const pctColor = k.label === 'Retrait' ? '#f87171' : icon.col;
     return `<div class="lpp-kpi-item">
+      <div class="lpp-kpi-icon" style="background:${icon.bg}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${icon.col}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${icon.svg}</svg>
+      </div>
       <div class="lpp-kpi-lbl">${k.label}</div>
-      <div class="lpp-kpi-val" style="color:${k.col}">${display}</div>
-      ${pctLbl ? `<div class="lpp-kpi-pct">${pctLbl}</div>` : ''}
-      <div class="lpp-kpi-foot"><div class="lpp-kpi-foot-fill" style="width:${pct.toFixed(1)}%;background:${k.col}"></div></div>
+      <div class="lpp-kpi-val">${display}</div>
+      ${pctLbl ? `<div class="lpp-kpi-pct" style="color:${pctColor}">${pctLbl}</div>` : ''}
+      <div class="lpp-kpi-bar"><div class="lpp-kpi-bar-fill" style="width:${pct.toFixed(1)}%;background:${icon.col}"></div></div>
     </div>`;
   }).join('');
 
@@ -1636,35 +1730,34 @@ function renderLpp() {
     }
   });
 
-  // ── BAR CHART: Versements mensuels — gradient comme line chart ──
-  const bCtx = document.getElementById('lppBarChart').getContext('2d');
-  const gBE = bCtx.createLinearGradient(0,0,0,140); gBE.addColorStop(0,'rgba(52,211,153,.9)'); gBE.addColorStop(1,'rgba(52,211,153,.3)');
-  const gBI = bCtx.createLinearGradient(0,0,0,140); gBI.addColorStop(0,'rgba(251,146,60,.9)');  gBI.addColorStop(1,'rgba(251,146,60,.3)');
-  if (lppBarC) lppBarC.destroy();
-  lppBarC = new Chart(bCtx, {
-    type: 'bar',
-    data: {
-      labels: fil.map(d => fmtDate(d.date)),
-      datasets: [
-        { label:'Épargne',  data:fil.map(d=>d.epargne),  backgroundColor:gBE, borderRadius:3, borderSkipped:'bottom' },
-        { label:'Intérêts', data:fil.map(d=>d.interets), backgroundColor:gBI, borderRadius:3, borderSkipped:'bottom' },
-      ]
-    },
-    options: {
-      responsive:true, maintainAspectRatio:false,
-      animation: { duration:600, easing:'easeOutCubic' },
-      interaction: {intersect:false, mode:'index'},
-      plugins: {
-        legend: {labels:{color:C.muted, font:{family:'Roboto',size:9}, boxWidth:8, boxHeight:8, padding:8}},
-        tooltip: tooltipOpts(true, true)
-      },
-      scales: {
-        x: {stacked:true, grid:{display:false}, ticks:{color:C.muted, font:{family:'Roboto',size:8}, maxTicksLimit:8}, border:{display:false}},
-        y: {stacked:true, grid:{color:'#1a1a1f'}, ticks:{color:C.muted, font:{family:'Roboto',size:9}, maxTicksLimit:4}, border:{display:false}}
-      },
-      barThickness: fil.length > 18 ? 8 : 14
-    }
-  });
+  // ── MONTHLY CONTRIBUTIONS — rendered as HTML bars ──
+  const contribEl = document.getElementById('lppContribList');
+  if (contribEl) {
+    const contribData = fil.filter(d => (d.epargne||0) > 0).slice(-6).reverse();
+    const maxVal = Math.max(...contribData.map(d => d.epargne||0), 1);
+    contribEl.innerHTML = contribData.map(d => {
+      const pct = Math.round((d.epargne||0) / maxVal * 100);
+      const monthLbl = new Date(d.date+'T00:00:00')
+        .toLocaleDateString('fr-CH',{month:'short'}).toUpperCase().replace('.','');
+      return `<div class="contrib-row">
+        <div class="contrib-month">${monthLbl}</div>
+        <div class="contrib-bar-wrap"><div class="contrib-bar-fill" style="width:${pct}%"></div></div>
+        <div class="contrib-amount">${fmt(d.epargne)}</div>
+      </div>`;
+    }).join('');
+  }
+
+  // ── AREA CHART LEGEND ──
+  const legendEl = document.getElementById('lppAreaLegend');
+  if (legendEl) {
+    legendEl.innerHTML = [
+      {col:'#34d399', lbl:'Épargne'},
+      {col:'#fb923c', lbl:'Intérêts'},
+      {col:'#60a5fa', lbl:'Rachats'},
+    ].map(l => `<div class="chart-legend-item">
+      <div class="chart-legend-dot" style="background:${l.col}"></div>${l.lbl}
+    </div>`).join('');
+  }
 }
 // ════════════════════════════════════════
 //  CASH
@@ -2090,7 +2183,7 @@ function renderP3aTxList() {
 // ── Période ──
 function setP3aPeriod(p, btn) {
   p3aPeriod = p;
-  document.querySelectorAll('.p3a-period-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('#page-3a .lpp-pill').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   renderP3a();
 }
@@ -2125,10 +2218,9 @@ function p3aCalcSQ(entries) {
       dividendes += (d.dividendes||0);
     }
   });
-  // cash = versements non investis + produit net des ventes
-  // versements non investis = versements - coutAchat (parts restantes) - coutAchatVendu (parts vendues)
+  // cash = versements non investis + produit net des ventes - retraits
   const cashNonInvesti = Math.max(0, versements - coutAchat - coutAchatVendu);
-  const cash = Math.round((cashNonInvesti + produitVente) * 100)/100;
+  const cash = Math.round((cashNonInvesti + produitVente - retrait) * 100)/100;
   return { parts:Math.max(0,parts), versements, dividendes, coutAchat, coutAchatVendu, cash, retrait, produitVente };
 }
 
@@ -2145,9 +2237,12 @@ function p3aCalcMob(entries) {
 // ── Periode start date ──
 function p3aPeriodStart(period) {
   const now = new Date();
+  // Utilise les méthodes locales pour éviter le décalage UTC (ex: UTC+1/+2 en Suisse)
+  const pad = n => String(n).padStart(2,'0');
+  const localDate = (d) => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
   if (period==='ytd') return `${now.getFullYear()}-01-01`;
-  if (period==='6m')  { const d=new Date(now); d.setMonth(d.getMonth()-6); return d.toISOString().slice(0,10); }
-  if (period==='1y')  { const d=new Date(now); d.setFullYear(d.getFullYear()-1); return d.toISOString().slice(0,10); }
+  if (period==='6m')  { const d=new Date(now); d.setMonth(d.getMonth()-6); return localDate(d); }
+  if (period==='1y')  { const d=new Date(now); d.setFullYear(d.getFullYear()-1); return localDate(d); }
   return null;
 }
 
@@ -2248,9 +2343,10 @@ function renderP3aInner() {
   let kpis;
   if (isSQ) {
     kpis=[
-      {label:'UBS Vitainvest', val:sqValParts, col:'#fb923c'},
-      {label:'Cash',           val:sq.cash,    col:'#60a5fa'},
+      {label:'UBS Vitainvest', val:sqValParts, col:'#fb923c', icon:'<path d="M3 3h18v18H3z"/><path d="M3 9h18M9 21V9"/>'},
+      {label:'Cash',           val:sq.cash,    col:'#60a5fa', icon:'<rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>'},
       {label:'Plus-value',     val:Math.abs(sqPlusValue), col:sqPlusValue>=0?'#34d399':'#f87171',
+       icon: sqPlusValue>=0 ? '<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>' : '<polyline points="22 17 13.5 8.5 8.5 13.5 2 7"/><polyline points="16 17 22 17 22 11"/>',
        prefix:sqPlusValue>=0?'+CHF ':'-CHF ',
        sub:sq.coutAchat>0?(sqPlusValue>=0?'+':'')+((sqPlusValue/sq.coutAchat)*100).toFixed(1)+'%':null,
        subCol:sqPlusValue>=0?'#34d399':'#f87171'},
@@ -2271,13 +2367,16 @@ function renderP3aInner() {
     ];
   }
   document.getElementById('p3aKpiGrid').innerHTML=kpis.map(k=>{
-    const disp=k.prefix?k.prefix+fmt(k.val):'CHF '+fmt(k.val);
+    const disp=k.prefix?k.prefix+fmt(Math.abs(k.val)):'CHF '+fmt(k.val);
     const pct=displayTotal>0?Math.min(k.val/displayTotal*100,100):0;
     return `<div class="lpp-kpi-item">
+      <div class="lpp-kpi-icon" style="background:${k.col}1a">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${k.col}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${k.icon||'<circle cx="12" cy="12" r="4"/>'}</svg>
+      </div>
       <div class="lpp-kpi-lbl">${k.label}</div>
-      <div class="lpp-kpi-val" style="color:${k.col};font-size:12px">${disp}</div>
-      ${k.sub?`<div style="font-size:9px;color:${k.subCol||k.col};margin-top:1px;font-family:'DM Mono',monospace">${k.sub}</div>`:''}
-      <div class="lpp-kpi-foot"><div class="lpp-kpi-foot-fill" style="width:${pct.toFixed(1)}%;background:${k.col}"></div></div>
+      <div class="lpp-kpi-val">${disp}</div>
+      ${k.sub?`<div class="lpp-kpi-pct" style="color:${k.subCol||k.col}">${k.sub}</div>`:''}
+      <div class="lpp-kpi-bar"><div class="lpp-kpi-bar-fill" style="width:${pct.toFixed(1)}%;background:${k.col}"></div></div>
     </div>`;
   }).join('');
 
@@ -2414,22 +2513,49 @@ function renderP3aInner() {
   if(p3aAreaC) p3aAreaC.destroy();
   p3aAreaC=new Chart(aCtx,{type:'bar',data:{labels:areaData.map(d=>d.label),datasets:[{label:'Capital',data:areaData.map(d=>d.val),backgroundColor:gV,borderRadius:{topLeft:3,topRight:3},stack:'s',borderSkipped:'bottom'}]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:700,easing:'easeOutQuart'},interaction:{intersect:false,mode:'index'},plugins:{legend:{display:false},tooltip:{backgroundColor:'#1a1a25',borderColor:'#3a3a50',borderWidth:1,titleColor:'#fb923c',bodyColor:'#e2e2ec',titleFont:{family:'Roboto',size:11},bodyFont:{family:'DM Mono',size:12},padding:10,displayColors:false,callbacks:{title:i=>i[0].label,label:i=>'CHF '+fmt(i.raw)}}},scales:{x:{stacked:true,grid:{display:false},ticks:{color:C.muted,font:{family:'DM Mono',size:8},maxTicksLimit:8},border:{display:false}},y:{stacked:true,grid:{color:'rgba(255,255,255,.04)'},ticks:{color:C.muted,font:{family:'DM Mono',size:9},callback:v=>`${(v/1000).toFixed(0)}k`,maxTicksLimit:5},border:{display:false}}},barThickness:areaData.length>18?7:13}});
 
-  // ── BAR CHART versements (MOB/consolidé) ou PERF (SQ) ──
-  const filData = data3A.filter(d=>(d.pilier||'swissquote')===(isSQ?'swissquote':'mobiliere')||(p3aPilier==='all'))
-    .filter(d=>!periodStartDate||d.date>=periodStartDate).sort((a,b)=>a.date.localeCompare(b.date));
-
-  if (!isSQ) {
-    const bCtx=document.getElementById('p3aBarChart').getContext('2d');
-    const gBV=bCtx.createLinearGradient(0,0,0,140); gBV.addColorStop(0,'rgba(52,211,153,.9)'); gBV.addColorStop(1,'rgba(52,211,153,.3)');
-    if(p3aBarC) p3aBarC.destroy();
-    p3aBarC=new Chart(bCtx,{type:'bar',data:{labels:filData.map(d=>fmtDate(d.date)),datasets:[{label:'Versement',data:filData.map(d=>d.versement||0),backgroundColor:gBV,borderRadius:3,borderSkipped:'bottom'}]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:600},interaction:{intersect:false,mode:'index'},plugins:{legend:{display:false},tooltip:{backgroundColor:'#1a1a25',borderColor:'#3a3a50',borderWidth:1,titleColor:'#fb923c',bodyColor:'#e2e2ec',padding:10,displayColors:false,callbacks:{title:i=>i[0].label,label:i=>'CHF '+fmt(i.raw)}}},scales:{x:{grid:{display:false},ticks:{color:C.muted,font:{family:'DM Mono',size:8},maxTicksLimit:8},border:{display:false}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:C.muted,font:{family:'DM Mono',size:9},maxTicksLimit:4},border:{display:false}}},barThickness:filData.length>18?7:13}});
+  // ── AREA CHART LEGEND ──
+  const p3aLegendEl = document.getElementById('p3aAreaLegend');
+  if (p3aLegendEl) {
+    const legendItems = isSQ
+      ? [{col:'#fb923c',lbl:'Swissquote'}]
+      : isMob
+        ? [{col:'#34d399',lbl:'La Mobilière'}]
+        : [{col:'#fb923c',lbl:'Swissquote'},{col:'#34d399',lbl:'La Mobilière'}];
+    p3aLegendEl.innerHTML = legendItems.map(l=>`<div class="chart-legend-item">
+      <div class="chart-legend-dot" style="background:${l.col}"></div>${l.lbl}
+    </div>`).join('');
   }
 
-  // Perf SQ : ligne verte/rouge depuis le premier investissement
-  if (isSQ) {
-    const invEvents = sqAll.filter(d=>d.type==='investissement').sort((a,b)=>a.date.localeCompare(b.date));
-    if (invEvents.length) {
-      // ── PERFORMANCE : (parts × prix_jour) - montant_investi, un point par jour ──
+  // ── MONTHLY CONTRIBUTIONS (3A) — HTML bars ──
+  const p3aContribEl = document.getElementById('p3aContribList');
+  const p3aBarHeader = document.getElementById('p3aBarHeader');
+  if (p3aContribEl) {
+    // Collect monthly versements for the selected pilier
+    const contribSource = isSQ ? sqAll : isMob ? mobAll : data3A.filter(d=>d.type!=='investissement'&&d.type!=='vente');
+    const contribFiltered = contribSource.filter(d => d.type==='versement' && (!periodStartDate||d.date>=periodStartDate));
+    // Group by month
+    const cMap = {};
+    contribFiltered.forEach(d => {
+      const m = d.date.slice(0,7);
+      cMap[m] = (cMap[m]||0) + (d.versement||0) + (d.interets||0);
+    });
+    const cEntries = Object.entries(cMap).sort((a,b)=>a[0].localeCompare(b[0])).slice(-6).reverse();
+    const maxC = Math.max(...cEntries.map(e=>e[1]), 1);
+    const color = isSQ ? '#fb923c' : isMob ? '#34d399' : 'var(--accent)';
+    if (p3aBarHeader) p3aBarHeader.textContent = 'Versements mensuels';
+    p3aContribEl.innerHTML = cEntries.map(([m,v]) => {
+      const pct = Math.round(v/maxC*100);
+      const lbl = new Date(m+'-01T00:00:00').toLocaleDateString('fr-CH',{month:'short'}).toUpperCase().replace('.','');
+      return `<div class="contrib-row">
+        <div class="contrib-month">${lbl}</div>
+        <div class="contrib-bar-wrap"><div class="contrib-bar-fill" style="width:${pct}%;background:${color}"></div></div>
+        <div class="contrib-amount">${fmt(v)}</div>
+      </div>`;
+    }).join('') || '<div style="padding:12px;color:var(--muted);font-size:12px;text-align:center">Aucun versement</div>';
+  }
+
+    if (isSQ) {
+  // ── PERFORMANCE : (parts × prix_jour) - montant_investi, un point par jour ──
       // Calcule le portefeuille cumulatif à chaque date de transaction
       const sqSorted = sqAll.slice().sort((a,b)=>a.date.localeCompare(b.date));
 
@@ -2458,15 +2584,15 @@ function renderP3aInner() {
       });
 
       // Filtre les prix du fond selon la période
-      const firstTxDate = sqSorted.find(d=>d.type==='investissement')?.date;
-      if (!firstTxDate) { if(p3aPerfC){p3aPerfC.destroy();p3aPerfC=null;} return; }
+      const firstBuyDate = sqSorted.find(d=>d.type==='investissement')?.date;
+      if (!firstBuyDate) { if(p3aPerfC){p3aPerfC.destroy();p3aPerfC=null;} return; }
 
             // Prend le max entre début de période et date du premier invest
-      const chartFromDate = periodStartDate && periodStartDate > firstTxDate
-        ? periodStartDate : firstTxDate;
+      const chartFromDate = periodStartDate && periodStartDate > firstBuyDate
+        ? periodStartDate : firstBuyDate;
 
-      const today = new Date().toISOString().slice(0,10);
-      const pricesInRange = UBS_VITAINVEST_PRICES.filter(p => p.d >= chartFromDate && p.d <= today);
+      const perfToday = new Date().toISOString().slice(0,10);
+      const pricesInRange = UBS_VITAINVEST_PRICES.filter(p => p.d >= chartFromDate && p.d <= perfToday);
 
       if (!pricesInRange.length) { if(p3aPerfC){p3aPerfC.destroy();p3aPerfC=null;} return; }
 
@@ -2545,7 +2671,6 @@ function renderP3aInner() {
           y:{grid:{color:'rgba(255,255,255,.04)'},border:{display:false},ticks:{color:C.muted,font:{family:'DM Mono',size:9},callback:v=>(v>=0?'+':'')+fmt(v)}}
         }}});
     }
-  }
 }
 
 function lppCalcTotal(epargne, interets, rachat, retrait, date, excludeDate=null) {
