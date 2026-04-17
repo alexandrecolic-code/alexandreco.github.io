@@ -447,6 +447,37 @@ body {
 }
 
 /* Bottom nav refinement */
+
+/* ── Insights ── */
+.insights-title {
+  font-size: 17px; font-weight: 700; color: var(--text);
+  letter-spacing: -0.3px; padding: 20px 20px 12px;
+}
+.insight-card {
+  display: flex; align-items: flex-start; gap: 14px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 18px; padding: 16px 18px;
+  margin: 0 20px 10px;
+  transition: border-color .2s;
+}
+.insight-icon {
+  width: 38px; height: 38px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; font-size: 18px;
+}
+.insight-body { flex: 1; min-width: 0; }
+.insight-label {
+  font-size: 11px; font-weight: 600; letter-spacing: 1px;
+  text-transform: uppercase; margin-bottom: 4px; color: var(--muted);
+}
+.insight-text {
+  font-size: 14px; color: var(--text); line-height: 1.45;
+}
+.insight-text strong { font-weight: 700; }
+.insight-highlight {
+  display: inline-block; margin-top: 6px;
+  font-size: 13px; font-weight: 700; font-family: 'DM Mono', monospace;
+}
 </style>
 </head>
 <body>
@@ -569,16 +600,8 @@ body {
   <!-- KPI grid rendu dynamiquement -->
   <div class="lpp-kpi-grid" id="lppKpiGrid"></div>
 
-  <div class="section-header">Capital Evolution</div>
-  <div class="lpp-card">
-    <div style="position:relative;height:160px"><canvas id="lppAreaChart"></canvas></div>
-    <div class="chart-legend" id="lppAreaLegend"></div>
-  </div>
-
-  <div class="section-header">Monthly Contributions</div>
-  <div class="lpp-card" style="padding:8px 4px">
-    <div id="lppContribList" class="contrib-list"></div>
-  </div>
+  <!-- Insights LPP -->
+  <div id="lppInsights"></div>
 
   <div style="padding:14px 18px 40px">
     <button onclick="showPage('lppTransactions')" style="width:100%;padding:13px;background:var(--bg2);border:1px solid var(--border);border-radius:14px;color:var(--muted);font-family:Roboto,sans-serif;font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s">
@@ -606,6 +629,7 @@ body {
   <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 0">
     <span style="font-size:17px;font-weight:700;color:var(--text);letter-spacing:-0.3px">Evolution</span>
   </div>
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 0"><span style="font-size:17px;font-weight:700;color:var(--text);letter-spacing:-0.3px">Evolution</span></div>
   <div class="lpp-line-wrap"><canvas id="p3aLineChart"></canvas></div>
   <div class="lpp-axis-row" id="p3aAxisRow"></div>
   <!-- Filtres temporels -->
@@ -638,14 +662,16 @@ body {
     </div>
   </div>
   <!-- Évolution du capital -->
+  <div class="section-header">Capital Evolution</div>
   <div class="lpp-card">
-    <div class="lpp-card-title">Évolution du capital</div>
     <div style="position:relative;height:160px"><canvas id="p3aAreaChart"></canvas></div>
+    <div class="chart-legend" id="p3aAreaLegend" style="margin-top:10px"></div>
   </div>
-  <!-- Versements mensuels (Mob / consolidé) ou Perf (SQ) -->
-  <div class="lpp-card" id="p3aCardBar">
-    <div class="lpp-card-title">Versements mensuels</div>
-    <div style="position:relative;height:140px"><canvas id="p3aBarChart"></canvas></div>
+  <!-- Versements mensuels / Perf -->
+  <div class="section-header" id="p3aBarHeader">Versements mensuels</div>
+  <div class="lpp-card" id="p3aCardBar" style="padding:8px 4px">
+    <div class="contrib-list" id="p3aContribList"></div>
+    <canvas id="p3aBarChart" style="display:none"></canvas>
   </div>
   <div class="lpp-card" id="p3aCardPerf" style="display:none">
     <div class="lpp-card-title">Performance UBS Vitainvest 100 (CHF)</div>
@@ -1106,14 +1132,7 @@ body {
 </button>
 <div class="bottom-nav">
   <button class="nav-btn active" id="nav-lpp" onclick="showPage('lpp')">
-    <span class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="3"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg></span>LPP
-  </button>
-  <button class="nav-btn" id="nav-3a" onclick="showPage('3a')">
-    <span class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></span>3A
-  </button>
-</div>
-
-<script>
+    <span class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width
 
 // ════════════════════════════════════════
 //  UBS VITAINVEST — Yahoo Finance (pas de CSV embarqué)
@@ -1729,6 +1748,9 @@ function renderLpp() {
       barThickness: areaData.length > 18 ? 7 : 13
     }
   });
+
+  // ── INSIGHTS ──
+  renderLppInsights(data, fil, lppData);
 
   // ── MONTHLY CONTRIBUTIONS — rendered as HTML bars ──
   const contribEl = document.getElementById('lppContribList');
@@ -2766,6 +2788,146 @@ function deleteLppEntry(date) {
   renderLppTxList();
 }
 
+
+function renderLppInsights(data, fil, lppData) {
+  const el = document.getElementById('lppInsights');
+  if (!el) return;
+
+  const all    = data;  // all months grouped
+  const latest = all[all.length - 1];
+  if (!latest) { el.innerHTML = ''; return; }
+
+  const total      = latest.total;
+  const now        = new Date();
+  const yr         = now.getFullYear();
+
+  // ── Calculs de base ──
+  const totalEpargne  = all.reduce((s,d) => s+(d.epargne||0), 0);
+  const totalInterets = all.reduce((s,d) => s+(d.interets||0), 0);
+  const totalRachats  = all.reduce((s,d) => s+(d.rachat||0), 0);
+  const totalRetraits = all.reduce((s,d) => s+(d.retrait||0), 0);
+  const capInit       = lppData[0]?.total || 0;
+
+  // Mois actuel en index dans all
+  const curMonthKey = `${yr}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const curEntry    = all.find(d => d.date.startsWith(curMonthKey));
+  const lastEntry   = all[all.length - 1];
+
+  // ── Taux d'intérêt annuel moyen ──
+  const avgMonthlyRate = totalEpargne > 0
+    ? (totalInterets / ((total - capInit - totalRachats + totalRetraits) / 2)) : 0;
+  const annualRate = Math.round(avgMonthlyRate * 12 * 10000) / 100;
+
+  // ── Projection fin d'année ──
+  const monthsLeft = 12 - now.getMonth() - 1;
+  const avgEpargne = all.length > 0
+    ? Math.round(totalEpargne / all.length * 100) / 100 : 0;
+  const monthlyInterest = total * (0.015 / 12);
+  const projEOY = Math.round((total + monthsLeft * (avgEpargne + monthlyInterest)) * 100) / 100;
+
+  // ── Meilleure et pire année ──
+  const byYear = {};
+  all.forEach(d => {
+    const y = d.date.slice(0,4);
+    if (!byYear[y]) byYear[y] = { epargne:0, interets:0, retraits:0 };
+    byYear[y].epargne  += d.epargne  || 0;
+    byYear[y].interets += d.interets || 0;
+    byYear[y].retraits += d.retrait  || 0;
+  });
+  const yearEntries = Object.entries(byYear).filter(([y]) => parseInt(y) < yr);
+  const bestYear  = yearEntries.sort((a,b) => b[1].interets - a[1].interets)[0];
+  const worstYear = yearEntries.sort((a,b) => a[1].interets - b[1].interets)[0];
+
+  // ── Durée jusqu'à un objectif (ex: 100k) ──
+  const OBJECTIF = Math.ceil(total / 100000) * 100000; // prochain palier 100k
+  const monthsToObjectif = avgEpargne > 0
+    ? Math.ceil((OBJECTIF - total) / (avgEpargne + monthlyInterest)) : null;
+
+  // ── Ratio intérêts / épargne ──
+  const interestRatio = totalEpargne > 0
+    ? Math.round(totalInterets / totalEpargne * 100) : 0;
+
+  // ── YTD intérêts ──
+  const ytdData = all.filter(d => d.date.startsWith(`${yr}-`));
+  const ytdInterets = ytdData.reduce((s,d) => s+(d.interets||0), 0);
+  const ytdEpargne  = ytdData.reduce((s,d) => s+(d.epargne||0), 0);
+
+  const insights = [];
+
+  // Insight 1 : projection fin d'année
+  if (monthsLeft > 0) {
+    insights.push({
+      icon: '📈', bg: 'rgba(91,141,239,.12)', col: '#5b8def',
+      label: 'Projection',
+      text: `À fin ${yr}, votre LPP devrait atteindre`,
+      highlight: `CHF ${fmt(projEOY)}`,
+      highlightCol: '#5b8def',
+    });
+  }
+
+  // Insight 2 : intérêts générés cette année
+  if (ytdInterets > 0) {
+    insights.push({
+      icon: '💰', bg: 'rgba(251,146,60,.12)', col: '#fb923c',
+      label: 'Intérêts YTD',
+      text: `Votre capital a généré <strong>CHF ${fmt(ytdInterets)}</strong> d'intérêts depuis janvier ${yr}.`,
+      highlight: ytdEpargne > 0 ? `${Math.round(ytdInterets/ytdEpargne*100)}% de vos versements` : null,
+      highlightCol: '#fb923c',
+    });
+  }
+
+  // Insight 3 : prochain palier
+  if (monthsToObjectif !== null && monthsToObjectif > 0 && monthsToObjectif < 120) {
+    const targetDate = new Date(now);
+    targetDate.setMonth(targetDate.getMonth() + monthsToObjectif);
+    const targetStr = targetDate.toLocaleDateString('fr-CH', {month:'long', year:'numeric'});
+    insights.push({
+      icon: '🎯', bg: 'rgba(52,211,153,.12)', col: '#34d399',
+      label: 'Prochain objectif',
+      text: `Vous atteindrez <strong>CHF ${fmt(OBJECTIF)}</strong> dans environ ${monthsToObjectif} mois`,
+      highlight: targetStr,
+      highlightCol: '#34d399',
+    });
+  }
+
+  // Insight 4 : ratio intérêts / effort
+  if (interestRatio > 0) {
+    const emoji = interestRatio >= 10 ? '🚀' : interestRatio >= 5 ? '✨' : '📊';
+    insights.push({
+      icon: emoji, bg: 'rgba(167,139,250,.12)', col: '#a78bfa',
+      label: 'Effet des intérêts',
+      text: `Sur l'ensemble de votre LPP, les intérêts représentent <strong>${interestRatio}%</strong> de vos versements totaux.`,
+      highlight: totalRachats > 0 ? `+CHF ${fmt(totalRachats)} de rachats` : null,
+      highlightCol: '#a78bfa',
+    });
+  }
+
+  // Insight 5 : dernier retrait si applicable
+  if (totalRetraits > 0) {
+    const lastRetrait = [...all].reverse().find(d => d.retrait > 0);
+    insights.push({
+      icon: '🏠', bg: 'rgba(248,113,113,.12)', col: '#f87171',
+      label: 'Retrait capital',
+      text: `Un retrait de <strong>CHF ${fmt(totalRetraits)}</strong> a été effectué.`,
+      highlight: 'Capital restant: CHF ' + fmt(total),
+      highlightCol: '#f87171',
+    });
+  }
+
+  el.innerHTML = `
+    <div class="insights-title">Insights</div>
+    ${insights.map(ins => `
+    <div class="insight-card">
+      <div class="insight-icon" style="background:${ins.bg}">${ins.icon}</div>
+      <div class="insight-body">
+        <div class="insight-label" style="color:${ins.col}">${ins.label}</div>
+        <div class="insight-text">${ins.text}</div>
+        ${ins.highlight ? `<div class="insight-highlight" style="color:${ins.highlightCol}">${ins.highlight}</div>` : ''}
+      </div>
+    </div>`).join('')}
+  `;
+}
+
 function renderLppDataList() {
   // kept for compatibility, calls renderLppTxList
   renderLppTxList();
@@ -3323,6 +3485,21 @@ const FUND_CACHE_TTL_MS  = 24 * 60 * 60 * 1000; // 24 heures
 // Prix historiques embarqués (CSV) — base toujours disponible
 
 //  2. Cache localStorage (valide 24h) — évite les appels répétés
+//  3. CSV embarqué comme base historique (toujours disponible)
+//
+//  ▶ Pour activer le prix live :
+//    1. Ouvrez script.google.com
+//    2. Collez le fichier gas_proxy.js
+//    3. Déployez comme Web App (accès : Anyone)
+//    4. Remplacez GAS_PROXY_URL par votre URL de déploiement
+// ════════════════════════════════════════════════════════════
+
+// ← Collez ici l'URL de votre Google Apps Script (laisser '' pour désactiver)
+const GAS_PROXY_URL = 'https://script.google.com/macros/s/AKfycbycec_AH5B4IhYz9fX2gLfIicu80fh2UPxYIRQCJQrXt6lKesH4jNOPkxsTm4Rza8fY6w/exec';
+
+// Prix historiques embarqués (CSV) — base toujours disponible
+
+
 //  3. CSV embarqué comme base historique (toujours disponible)
 //
 //  ▶ Pour activer le prix live :
