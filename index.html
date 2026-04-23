@@ -1132,8 +1132,14 @@ body {
 </button>
 <div class="bottom-nav">
   <button class="nav-btn active" id="nav-lpp" onclick="showPage('lpp')">
-    <span class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width
+    <span class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="3"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg></span>LPP
+  </button>
+  <button class="nav-btn" id="nav-3a" onclick="showPage('3a')">
+    <span class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></span>3A
+  </button>
+</div>
 
+<script>
 // ════════════════════════════════════════
 //  UBS VITAINVEST — Yahoo Finance (pas de CSV embarqué)
 // ════════════════════════════════════════
@@ -1752,34 +1758,7 @@ function renderLpp() {
   // ── INSIGHTS ──
   renderLppInsights(data, fil, lppData);
 
-  // ── MONTHLY CONTRIBUTIONS — rendered as HTML bars ──
-  const contribEl = document.getElementById('lppContribList');
-  if (contribEl) {
-    const contribData = fil.filter(d => (d.epargne||0) > 0).slice(-6).reverse();
-    const maxVal = Math.max(...contribData.map(d => d.epargne||0), 1);
-    contribEl.innerHTML = contribData.map(d => {
-      const pct = Math.round((d.epargne||0) / maxVal * 100);
-      const monthLbl = new Date(d.date+'T00:00:00')
-        .toLocaleDateString('fr-CH',{month:'short'}).toUpperCase().replace('.','');
-      return `<div class="contrib-row">
-        <div class="contrib-month">${monthLbl}</div>
-        <div class="contrib-bar-wrap"><div class="contrib-bar-fill" style="width:${pct}%"></div></div>
-        <div class="contrib-amount">${fmt(d.epargne)}</div>
-      </div>`;
-    }).join('');
-  }
-
-  // ── AREA CHART LEGEND ──
-  const legendEl = document.getElementById('lppAreaLegend');
-  if (legendEl) {
-    legendEl.innerHTML = [
-      {col:'#34d399', lbl:'Épargne'},
-      {col:'#fb923c', lbl:'Intérêts'},
-      {col:'#60a5fa', lbl:'Rachats'},
-    ].map(l => `<div class="chart-legend-item">
-      <div class="chart-legend-dot" style="background:${l.col}"></div>${l.lbl}
-    </div>`).join('');
-  }
+  
 }
 // ════════════════════════════════════════
 //  CASH
@@ -2789,7 +2768,7 @@ function deleteLppEntry(date) {
 }
 
 
-function renderLppInsights(data, fil, lppData) {
+function renderLppInsights(data, fil, allLppData) {
   const el = document.getElementById('lppInsights');
   if (!el) return;
 
@@ -2806,7 +2785,7 @@ function renderLppInsights(data, fil, lppData) {
   const totalInterets = all.reduce((s,d) => s+(d.interets||0), 0);
   const totalRachats  = all.reduce((s,d) => s+(d.rachat||0), 0);
   const totalRetraits = all.reduce((s,d) => s+(d.retrait||0), 0);
-  const capInit       = lppData[0]?.total || 0;
+  const capInit       = allLppData[0]?.total || 0;
 
   // Mois actuel en index dans all
   const curMonthKey = `${yr}-${String(now.getMonth()+1).padStart(2,'0')}`;
@@ -3491,26 +3470,7 @@ const FUND_CACHE_TTL_MS  = 24 * 60 * 60 * 1000; // 24 heures
 //    1. Ouvrez script.google.com
 //    2. Collez le fichier gas_proxy.js
 //    3. Déployez comme Web App (accès : Anyone)
-//    4. Remplacez GAS_PROXY_URL par votre URL de déploiement
-// ════════════════════════════════════════════════════════════
-
-// ← Collez ici l'URL de votre Google Apps Script (laisser '' pour désactiver)
-const GAS_PROXY_URL = 'https://script.google.com/macros/s/AKfycbycec_AH5B4IhYz9fX2gLfIicu80fh2UPxYIRQCJQrXt6lKesH4jNOPkxsTm4Rza8fY6w/exec';
-
-// Prix historiques embarqués (CSV) — base toujours disponible
-
-
-//  3. CSV embarqué comme base historique (toujours disponible)
-//
-//  ▶ Pour activer le prix live :
-//    1. Ouvrez script.google.com
-//    2. Collez le fichier gas_proxy.js
-//    3. Déployez comme Web App (accès : Anyone)
-//    4. Remplacez GAS_PROXY_URL par votre URL de déploiement
-// ════════════════════════════════════════════════════════════
-
-// ← Collez ici l'URL de votre Google Apps Script (laisser '' pour désactiver)
-const GAS_PROXY_URL = 'https://script.google.com/macros/s/AKfycbycec_AH5B4IhYz9fX2gLfIicu80fh2UPxYIRQCJQrXt6lKesH4jNOPkxsTm4Rza8fY6w/exec';
+//    4. Remplacez GAS_PROXY_URL par votre URL de déploiementconst GAS_PROXY_URL = 'https://script.google.com/macros/s/AKfycbycec_AH5B4IhYz9fX2gLfIicu80fh2UPxYIRQCJQrXt6lKesH4jNOPkxsTm4Rza8fY6w/exec';
 
 // Prix historiques embarqués (CSV) — base toujours disponible
 
