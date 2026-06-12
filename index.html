@@ -627,9 +627,7 @@ body {
       <span class="lpp-ytd-sub" id="p3aYtdSub">depuis janv. 2026</span>
     </div>
   </div>
-  <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 0">
-    <span style="font-size:17px;font-weight:700;color:var(--text);letter-spacing:-0.3px">Evolution</span>
-  </div>
+  
   <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 0"><span style="font-size:17px;font-weight:700;color:var(--text);letter-spacing:-0.3px">Evolution</span></div>
   <div class="lpp-line-wrap"><canvas id="p3aLineChart"></canvas></div>
   <div class="lpp-axis-row" id="p3aAxisRow"></div>
@@ -663,17 +661,16 @@ body {
     </div>
   </div>
   <!-- Évolution du capital -->
-  <div class="section-header">Capital Evolution</div>
-  <div class="lpp-card">
+    <div class="lpp-card">
     <div style="position:relative;height:160px"><canvas id="p3aAreaChart"></canvas></div>
     <div class="chart-legend" id="p3aAreaLegend" style="margin-top:10px"></div>
   </div>
   <!-- Versements mensuels / Perf -->
-  <div class="section-header" id="p3aBarHeader">Versements mensuels</div>
-  <div class="lpp-card" id="p3aCardBar" style="padding:8px 4px">
+    <div class="lpp-card" id="p3aCardBar" style="padding:8px 4px">
     <div class="contrib-list" id="p3aContribList"></div>
     <canvas id="p3aBarChart" style="display:none"></canvas>
   </div>
+  <div id="p3aInsights"></div>
   <div class="lpp-card" id="p3aCardPerf" style="display:none">
     <div class="lpp-card-title">Performance UBS Vitainvest 100 (CHF)</div>
     <div style="position:relative;height:140px"><canvas id="p3aPerfChart"></canvas></div>
@@ -2276,6 +2273,37 @@ async function renderP3a() {
   renderP3aInner();
 }
 
+
+function renderP3aInsights(sqAll, mobAll, sq, mob, sqPrix) {
+  const el = document.getElementById('p3aInsights');
+  if (!el) return;
+  const now = new Date(), yr = now.getFullYear(), ins = [];
+  const sqVal = Math.round(sq.parts * sqPrix * 100)/100;
+  const sqPnL = Math.round((sqVal - sq.coutAchat)*100)/100;
+  const sqPct = sq.coutAchat > 0 ? (sqPnL/sq.coutAchat*100).toFixed(1) : '0.0';
+  if (sq.parts > 0) ins.push({icon:sqPnL>=0?'📈':'📉',
+    bg:`rgba(${sqPnL>=0?'52,211,153':'248,113,113'},.12)`, col:sqPnL>=0?'#34d399':'#f87171',
+    lbl:'Performance Swissquote',
+    txt:`<strong>${sq.parts.toFixed(4)}</strong> parts à CHF ${sqPrix}/part`,
+    hl:`${sqPnL>=0?'▲ +':'▼ '}CHF ${fmt(Math.abs(sqPnL))} (${sqPnL>=0?'+':''}${sqPct}%)`});
+  if (sq.cash > 0) ins.push({icon:'💵', bg:'rgba(96,165,250,.12)', col:'#60a5fa',
+    lbl:'Cash Swissquote', txt:`CHF <strong>${fmt(sq.cash)}</strong> non investi`, hl:null});
+  const mobNet = Math.round((mob.versements-mob.frais+mob.interets-mob.retrait)*100)/100;
+  if (mob.versements > 0) ins.push({icon:'🏛️', bg:'rgba(52,211,153,.12)', col:'#34d399',
+    lbl:'La Mobilière', txt:`Valeur: <strong>CHF ${fmt(mobNet)}</strong>`,
+    hl:mob.interets>0?`${Math.round(mob.interets/mob.versements*100)}% d'intérêts`:null});
+  const ytd = sqAll.concat(mobAll).filter(d=>d.date.startsWith(`${yr}-`)&&d.type==='versement').reduce((s,d)=>s+(d.versement||0),0);
+  if (ytd > 0) { const reste = Math.max(0,7258-ytd);
+    ins.push({icon:'🎯', bg:'rgba(167,139,250,.12)', col:'#a78bfa',
+      lbl:`Versements ${yr}`, txt:`<strong>CHF ${fmt(ytd)}</strong> versés depuis janvier`,
+      hl:reste>0?`Reste CHF ${fmt(reste)} avant plafond`:`Plafond ${yr} atteint ✓`}); }
+  el.innerHTML = ins.length ? `<div class="insights-title">Insights</div>${ins.map(i=>`
+    <div class="insight-card"><div class="insight-icon" style="background:${i.bg}">${i.icon}</div>
+    <div class="insight-body"><div class="insight-label" style="color:${i.col}">${i.lbl}</div>
+    <div class="insight-text">${i.txt}</div>
+    ${i.hl?`<div class="insight-highlight" style="color:${i.col}">${i.hl}</div>`:''}</div></div>`).join('')}` : '';
+}
+
 function renderP3aInner() {
   if (!document.getElementById('p3aVal')) return;
   // Si les prix ne sont pas encore chargés, affiche un indicateur de chargement
@@ -2597,12 +2625,12 @@ function renderP3aInner() {
         ? periodStartDate : firstBuyDate;
 
       const perfToday = new Date().toISOString().slice(0,10);
-      const pricesInRange = UBS_VITAINVEST_PRICES.filter(p => p.d >= chartFromDate && p.d <= perfToday);
-
+      let pricesInRange = UBS_VITAINVEST_PRICES.filter(p => p.d >= chartFromDate && p.d <= perfToday);
+      if (!pricesInRange.length) pricesInRange = UBS_VITAINVEST_PRICES.filter(p => p.d >= firstBuyDate && p.d <= perfToday);
       if (!pricesInRange.length) { if(p3aPerfC){p3aPerfC.destroy();p3aPerfC=null;} return; }
 
       // Pour chaque jour avec un prix : calcule (parts_à_ce_jour × prix) - montant_investi
-      let curParts = 0, curInvesti = 0;
+      let curParts = 0, curInvesti = 0, curRealised = 0;
       // Initialise avec l'état avant chartFromDate
       sqSorted.forEach(d => {
         if (d.date < chartFromDate) {
